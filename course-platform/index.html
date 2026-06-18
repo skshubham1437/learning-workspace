@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Course navigation">
+            <div class="sidebar-header">
+                <h2>Learning Hub</h2>
+            </div>
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <!-- Dynamically populated by JS -->
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- App Header for toggle -->
+            <header class="app-header">
+                <button id="menu-toggle-btn" class="icon-btn" aria-label="Toggle Sidebar" aria-expanded="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </header>
+
+            <div class="iframe-container">
+                <iframe id="content-frame" name="content-frame" title="Lesson Content"></iframe>
+            </div>
+            
+            <!-- Navigation Footer -->
+            <footer class="footer-nav">
+                <button id="prev-btn" class="nav-btn" aria-label="Go to previous lesson">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    Previous Lesson
+                </button>
+                <div class="lesson-progress" id="lesson-progress">
+                    <!-- Progress Info -->
+                </div>
+                <button id="next-btn" class="nav-btn primary" aria-label="Go to next lesson">
+                    Next Lesson
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Data and Logic -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
