@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 01, Lesson 1 — What Microservices Actually Are</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens (github-actions-docker theme) ───────────────────── */
+    :root {
+      --bg:              #faf9f6;
+      --fg:              #1a1a1a;
+      --accent:          #2563eb;
+      --accent-light:    #dbeafe;
+      --muted:           #6b7280;
+      --border:          #e5e7eb;
+      --code-bg:         #f3f4f6;
+      --callout-bg:      #fffbeb;
+      --callout-border:  #f59e0b;
+      --success-bg:      #ecfdf5;
+      --success-border:  #10b981;
+      --danger-bg:       #fef2f2;
+      --danger-border:   #ef4444;
+      --warn-bg:         #fffbeb;
+      --warn-border:     #f59e0b;
+      --serif:           'Source Serif 4', Georgia, serif;
+      --sans:            'Inter', system-ui, sans-serif;
+      --mono:            'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--serif);
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: var(--fg);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    .lesson-number {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Meta pills ─────────────────────────────────────────────────────── */
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+      font-family: var(--sans);
+    }
+    .pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: white;
+    }
+    .pill-accent { border-color: var(--accent); color: var(--accent); }
+    .pill-green  { border-color: #10b981; color: #047857; }
+
+    /* ── Headings ───────────────────────────────────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    /* ── Body text ──────────────────────────────────────────────────────── */
+    p { margin-bottom: 1.25rem; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+
+    ul, ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+    li { margin-bottom: 0.5rem; }
+
+    /* ── Code ───────────────────────────────────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: inherit;
+    }
+
+    /* ── Callouts ───────────────────────────────────────────────────────── */
+    .callout {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+
+    .callout-key {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+    .callout-warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+    }
+    .callout-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+    }
+    .callout-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .callout-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .callout-key     .callout-label { color: var(--accent); }
+    .callout-warn    .callout-label { color: #92400e; }
+    .callout-danger  .callout-label { color: #b91c1c; }
+    .callout-success .callout-label { color: #047857; }
+
+    /* ── Diagram / white box ────────────────────────────────────────────── */
+    .diagram {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+    }
+
+    /* ── Comparison table ────────────────────────────────────────────────  */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.65rem 0.9rem;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    td {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--fg);
+    }
+    tr:last-child td { border-bottom: none; }
+    .yes  { color: #047857; font-weight: 600; }
+    .no   { color: #b91c1c; font-weight: 600; }
+    .mid  { color: #92400e; font-weight: 600; }
+
+    /* ── Coupling diagram (architecture sketch) ─────────────────────────── */
+    .arch-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+      flex-wrap: wrap;
+    }
+    .arch-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 1.5px solid;
+    }
+    .arch-blue   { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+    .arch-green  { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+    .arch-amber  { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+    .arch-red    { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .arch-gray   { background: #f3f4f6; border-color: #d1d5db; color: var(--muted); }
+    .arch-arrow  { color: var(--muted); font-size: 1rem; }
+    .arch-label  {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    /* ── Exercise block ─────────────────────────────────────────────────── */
+    .exercise {
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
+      border-radius: 8px;
+      padding: 1.5rem 1.75rem;
+      margin: 2.5rem 0;
+    }
+    .exercise-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #047857;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .exercise h3 { margin-top: 0.25rem; }
+
+    /* ── Retrieval / flashcards ──────────────────────────────────────────── */
+    .retrieval {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+    }
+    .retrieval h3 {
+      margin-top: 0;
+      color: var(--accent);
+      font-family: var(--sans);
+    }
+    .retrieval-question {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      margin-bottom: 0.75rem;
+      font-style: italic;
+    }
+
+    details { margin-bottom: 1rem; }
+
+    summary {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0.35rem 0;
+      list-style: none;
+    }
+    summary::before { content: '▶ '; font-size: 0.65em; }
+    details[open] summary::before { content: '▼ '; }
+    summary:hover { text-decoration: underline; }
+    details[open] summary { margin-bottom: 0.5rem; }
+    details p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      padding-left: 1rem;
+      border-left: 2px solid var(--accent-light);
+      margin-bottom: 0;
+    }
+
+    /* Recall tags */
+    .recall-tag {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.1rem 0.45rem;
+      border-radius: 99px;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+    .r1d { background: #fef3c7; color: #92400e; }
+    .r3d { background: #dbeafe; color: #1e40af; }
+    .r7d { background: #d1fae5; color: #047857; }
+
+    /* ── Interview section ───────────────────────────────────────────────── */
+    .interview-tier {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 0.75rem 0;
+    }
+    .tier-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .t1 { color: #047857; }
+    .t2 { color: var(--accent); }
+    .t3 { color: #92400e; }
+    .t4 { color: #b91c1c; }
+    .interview-tier ul { margin-bottom: 0; }
+    .interview-tier li { font-size: 0.9rem; color: var(--fg); }
+
+    /* ── Progress bar ───────────────────────────────────────────────────── */
+    .progress-wrap {
+      font-family: var(--sans);
+      margin-bottom: 2.5rem;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 6.7%; /* 1 of 15 */
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────────────── */
+    .lesson-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── Print ──────────────────────────────────────────────────────────── */
+    @media print {
+      body { max-width: 100%; padding: 1rem; font-size: 1rem; }
+      .diagram { break-inside: avoid; }
+      .retrieval { break-inside: avoid; }
+    }
+
+    /* ── Mobile ─────────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      body { padding: 1.5rem 1rem 4rem; font-size: 1rem; }
+      h1 { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Course progress</span>
+      <span>Module 01 of 15 — Phase 1 of 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+  </div>
+
+  <!-- Header -->
+  <div class="lesson-number">Module 01 · Foundations · Lesson 1 of 3</div>
+  <h1>What Microservices Actually Are</h1>
+  <p class="subtitle">
+    Why your monolith is not "wrong," what problems microservices actually solve,
+    and how to recognise when you have those problems.
+  </p>
+
+  <div class="pills">
+    <span class="pill pill-accent">⏱ 25 min read</span>
+    <span class="pill pill-green">Phase 1 — Foundations &amp; Design</span>
+    <span class="pill">Prereq: Your Express monolith mental model</span>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       1. THE PROBLEM YOU ALREADY HAVE
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>The problem you already have</h2>
+
+  <p>
+    You said your Express monolith has clear module separation — routes, controllers, services, models.
+    That's good architecture. But here's the problem it doesn't solve:
+  </p>
+
+  <div class="callout callout-warn">
+    <span class="callout-label">The deployment coupling problem</span>
+    <p>
+      When the Orders team merges a change, <em>the entire application redeploys</em>.
+      The Users team can't ship without waiting for Orders. The Payments team can't
+      deploy a hotfix without a full release cycle. Everyone is coupled not by code,
+      but by <strong>the deployment unit</strong>.
+    </p>
+  </div>
+
+  <p>
+    Your folder structure inside the monolith is like having separate departments on different floors
+    of the same office building. They're logically separated, but they all share the same elevator —
+    the elevator being your single <code>node server.js</code> process.
+    If the elevator breaks (a crash), everyone is stuck. If one team needs to renovate their floor,
+    the whole building goes offline.
+  </p>
+
+  <p>
+    <strong>Microservices replace the one elevator with many elevators.</strong>
+    Each team gets their own building. They can renovate, expand, or shut down
+    independently. But now you have to manage many buildings,
+    coordinate when someone needs to cross the street, and handle what happens
+    when the bridge between buildings closes.
+  </p>
+
+  <p>
+    That last part — the coordination cost — is what the microservices industry spent a decade
+    learning to manage. This course is the compressed version of those lessons.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       2. FORMAL DEFINITION
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Formal definition &amp; what it actually means</h2>
+
+  <p>
+    Martin Fowler's definition (the one the field uses): microservices are an architectural style
+    where a single application is developed as a suite of <strong>small, independently deployable
+    services</strong>, each running in its own process, communicating over lightweight mechanisms,
+    and deployed independently.
+  </p>
+
+  <p>
+    The three words that matter most are: <em>independently deployable</em>.
+    Not "small" — that's a symptom, not the goal.
+    Not "single responsibility" — that's a design principle, not a boundary condition.
+    The true test of a microservice is: <strong>can it be deployed without any other service being redeployed?</strong>
+  </p>
+
+  <h3>The architecture spectrum</h3>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Monolith</th>
+          <th>Modular Monolith</th>
+          <th>Microservices</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Deployment unit</td>
+          <td>One process</td>
+          <td>One process</td>
+          <td>N processes</td>
+        </tr>
+        <tr>
+          <td>Deploy independence</td>
+          <td class="no">None</td>
+          <td class="no">None</td>
+          <td class="yes">Full</td>
+        </tr>
+        <tr>
+          <td>All calls in-process</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="no">No — network only</td>
+        </tr>
+        <tr>
+          <td>Shared database possible</td>
+          <td class="yes">Common</td>
+          <td class="mid">Discouraged</td>
+          <td class="no">Anti-pattern</td>
+        </tr>
+        <tr>
+          <td>Scale services independently</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Team independence</td>
+          <td class="no">Low</td>
+          <td class="mid">Medium</td>
+          <td class="yes">High</td>
+        </tr>
+        <tr>
+          <td>Operational complexity</td>
+          <td class="yes">Low</td>
+          <td class="yes">Low</td>
+          <td class="no">High</td>
+        </tr>
+        <tr>
+          <td>Every call can fail</td>
+          <td class="yes">Never</td>
+          <td class="yes">Never</td>
+          <td class="no">Always possible</td>
+        </tr>
+        <tr>
+          <td>Distributed tracing needed</td>
+          <td class="yes">No</td>
+          <td class="yes">No</td>
+          <td class="no">Mandatory</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The criminally underrated option</span>
+    <p>
+      The <strong>Modular Monolith</strong> gives you most of the code-organisation benefits
+      of microservices with almost none of the operational cost. If your team is small (&lt;10 engineers),
+      you have one deployment pipeline, or you're early in a product's life —
+      a Modular Monolith is almost certainly the right call.
+      Amazon, Netflix, and Uber all started as monoliths.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       3. CONWAY'S LAW
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Conway's Law — the hidden force shaping your architecture</h2>
+
+  <p>
+    Melvin Conway (1968): <em>"Any organisation that designs a system will produce a design
+    whose structure is a copy of the organisation's communication structure."</em>
+  </p>
+
+  <p>
+    In plain terms: <strong>your team structure becomes your system architecture, whether you plan it or not.</strong>
+    If your company has three teams — Frontend, Backend, Database — you will build a three-tier
+    architecture. Not because it's the best design, but because that's how your humans communicate.
+  </p>
+
+  <h3>The Inverse Conway Maneuver</h3>
+  <p>
+    Amazon's approach (Bezos' "two-pizza team" mandate): deliberately <em>restructure the organisation
+    first</em> to match the desired architecture, then let the architecture emerge.
+    If you want Orders and Users to be independently deployable, you need an Orders team and a Users team
+    who can ship without talking to each other. Without that, your "microservices" are still coupled at
+    the team-coordination layer — which is worse than a monolith.
+  </p>
+
+  <div class="diagram">
+    <div style="margin-bottom: 1.25rem;">
+      <div style="font-family: var(--sans); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem;">Conway in action</div>
+      <div class="arch-row">
+        <span class="arch-box arch-amber">1 Backend Team</span>
+        <span class="arch-arrow">→ produces →</span>
+        <span class="arch-box arch-amber">1 Monolithic API</span>
+      </div>
+      <span class="arch-label">Everyone coordinates every deployment. Fast at first, painful at scale.</span>
+    </div>
+    <div>
+      <div class="arch-row">
+        <span class="arch-box arch-green">Orders Team</span>
+        <span class="arch-box arch-green">Users Team</span>
+        <span class="arch-box arch-green">Payments Team</span>
+        <span class="arch-arrow">→ produces →</span>
+        <span class="arch-box arch-blue">3 Independent Services</span>
+      </div>
+      <span class="arch-label">Each team ships independently. Coordination happens through APIs, not Slack.</span>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       4. HOW REAL COMPANIES DID IT
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>How real companies actually did this</h2>
+
+  <h3>Amazon — the mandate that changed the industry</h3>
+  <p>
+    In 2002, Jeff Bezos issued a memo requiring every team to expose data and functionality
+    only through service APIs — no exceptions, no back-channel access, no shared databases.
+    This wasn't an engineering decision; it was an organisational one.
+    The result: Amazon's internal services became the foundation of AWS. EC2, S3, and SQS
+    were built for internal use first. Conway's Law, deliberately applied.
+  </p>
+
+  <h3>Netflix — from DVD-by-mail to 700+ services</h3>
+  <p>
+    Netflix's 2008 database corruption incident took their entire service offline for three days —
+    one shared database, one point of failure. They migrated to AWS and decomposed into microservices
+    over seven years. By 2016: 700+ services, ~5,000 production changes per day.
+    What they learned the hard way: distributed failures are non-deterministic, so
+    they invented <em>chaos engineering</em> — deliberately injecting failures in production.
+    Netflix Hystrix (circuit breaker library) came directly from these war stories.
+  </p>
+
+  <h3>Uber — the distributed monolith trap</h3>
+  <p>
+    Uber split into 2,000+ microservices by 2018. Then they discovered the problem:
+    too many services created a new kind of tight coupling. A change in one service
+    cascaded through 40 dependent services. They'd replaced compile-time coupling with runtime
+    coupling — and runtime coupling is harder to detect.
+    Uber responded with Domain-Oriented Microservice Architecture (DOMA): grouping services
+    into domains with clear ownership, reducing the blast radius of any single change.
+  </p>
+
+  <h3>Spotify — the squad model</h3>
+  <p>
+    Spotify built their architecture around autonomous "squads" — small cross-functional teams
+    that own a feature end-to-end (frontend, backend, data, ops). Each squad owns their service(s)
+    completely, from code to production. This is the organisational structure that makes microservices
+    actually work. Without it, you get the coordination overhead of microservices without the autonomy benefits.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       5. WHEN NOT TO USE MICROSERVICES
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>When microservices are the wrong answer</h2>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">The Microservice Premium — Martin Fowler</span>
+    <p>
+      The upfront cost you pay with microservices: distributed systems complexity,
+      network latency, operational overhead, debugging difficulty.
+      You only come out ahead when the productivity benefits of team independence
+      outweigh that upfront cost. <strong>Most teams never reach the scale where this crossover happens.</strong>
+    </p>
+  </div>
+
+  <p><strong>Do not use microservices if:</strong></p>
+  <ul>
+    <li>Your team is fewer than 10–15 engineers (coordination overhead exceeds autonomy gains)</li>
+    <li>You haven't built the product yet — you don't know where the domain boundaries are</li>
+    <li>You lack strong DevOps / SRE capability (microservices multiply operational complexity)</li>
+    <li>Your services would share a database anyway — that's a distributed monolith, not microservices</li>
+    <li>You can't articulate which team owns which service — no org alignment means no benefit</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The "Monolith First" argument</span>
+    <p>
+      Sam Newman (<em>Building Microservices</em>) and Martin Fowler both argue: build the monolith first.
+      You can only draw correct service boundaries after you understand the domain well.
+      Premature decomposition is one of the most common and costly distributed systems mistakes.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       6. COMMON MISTAKES
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Common mistakes — especially from a monolith background</h2>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Mistake</th>
+          <th>Why monolith engineers make it</th>
+          <th>The fix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Decompose by technical layer</strong></td>
+          <td>Your monolith has routes/controllers/services/models, so you split the same way — producing a "Data Service" and "API Service" that both hit the same DB</td>
+          <td>Decompose by business capability, not technical layer (Module 02)</td>
+        </tr>
+        <tr>
+          <td><strong>Shared database</strong></td>
+          <td>Easiest way to share data — it's what you do in the monolith</td>
+          <td>Database-per-service. Each service owns its data (Module 04)</td>
+        </tr>
+        <tr>
+          <td><strong>Synchronous everything</strong></td>
+          <td>Every function call in Express returns immediately — you expect the same from services</td>
+          <td>Learn when to use async messaging instead (Module 03)</td>
+        </tr>
+        <tr>
+          <td><strong>Too many services too fast</strong></td>
+          <td>More services = more "micro" = more correct (wrong)</td>
+          <td>"Death by a thousand services" anti-pattern — Module 02</td>
+        </tr>
+        <tr>
+          <td><strong>No API contract discipline</strong></td>
+          <td>In the monolith, the compiler catches breaking changes. In microservices, Service B crashes silently at 2am when Service A changes its response shape</td>
+          <td>API versioning and consumer-driven contract testing</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       EXERCISE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="exercise">
+    <span class="exercise-label">Exercise — Module 01, Lesson 1</span>
+    <h3>Map your monolith's coupling surface</h3>
+
+    <p style="margin-top: 0.75rem;">
+      Take your actual Express monolith (or your closest mental model of one).
+      Draw — on paper or in Excalidraw — an architecture diagram with the following:
+    </p>
+
+    <ol>
+      <li>
+        List your 4–6 main functional areas (e.g. Users, Orders, Products, Payments, Notifications, Admin).
+        These are your potential service candidates.
+      </li>
+      <li>
+        Draw lines between them for every place where one area <strong>reads or writes another area's data</strong>
+        directly — via a shared function call or a shared DB table.
+      </li>
+      <li>
+        Circle any area where changes are <strong>most frequently blocked by another area's release</strong>.
+      </li>
+      <li>
+        Write one sentence for each candidate: <em>"If this was its own service, which team would own it,
+        and what would they need from other services?"</em>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Success criterion:</strong> You can identify your top 2 candidates for service extraction
+      and explain <em>what problem that extraction solves</em> — not just that they could be separate.
+    </p>
+
+    <p style="margin-top: 0.75rem; color: #047857; font-family: var(--sans); font-size: 0.88rem;">
+      Post your findings before moving to Lesson 2 (Bounded Contexts &amp; DDD).
+      Rough notes are fine — this exercise calibrates how deep Module 02 needs to go.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       FLASHCARDS (retrieval practice)
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p style="font-family: var(--sans); font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Answer from memory before revealing. The slight difficulty is the point — it's where storage strength builds.
+    </p>
+
+    <div class="retrieval-question">
+      1. What is the true test of a microservice — not "small" or "single responsibility," but the one property that defines it?
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        Independent deployability: can it be deployed without any other service being redeployed?
+        Size and responsibility are design guidance. This is the architectural boundary condition.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      2. State Conway's Law and give a concrete example from a real company.
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        "Any organisation that designs a system will produce a design whose structure is a copy of the organisation's
+        communication structure." Example: Amazon restructured into two-pizza teams before building service APIs —
+        the org change enabled the architectural change, not the other way around.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      3. What is a distributed monolith, and why is it worse than an actual monolith?
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        A distributed monolith is a microservices deployment where services are still tightly coupled —
+        typically through a shared database or deep synchronous call chains. It's worse because you have all
+        the operational complexity of distributed systems (network failures, partial failures, tracing) without
+        any of the autonomy benefits.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      4. What is the "Microservice Premium" and when, if ever, does it pay off?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        The upfront cost of microservices complexity. It pays off only when the productivity gains from
+        team independence — independent deployability and scaling — outweigh the distributed systems overhead.
+        Most teams never reach this crossover. Fowler argues most should start with a monolith.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      5. Name three concrete signs that a monolith should <em>not</em> be split into microservices yet.
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        1. Team is fewer than ~10 engineers (overhead exceeds autonomy gain).
+        2. The product domain isn't understood well enough to draw correct boundaries.
+        3. No strong DevOps/SRE capability to manage N services in production.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      6. What mistake did Uber make going to 2,000+ services, and how did they recover?
+      <span class="recall-tag r7d">RECALL-7D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        Changes in one service cascaded through 40 dependent services — runtime coupling replaced compile-time coupling,
+        which is harder to detect. Recovery: Domain-Oriented Microservice Architecture (DOMA) — grouping services
+        into domains with clear ownership, reducing blast radius.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      7. The Modular Monolith vs Microservices: what is the one critical difference in how they behave at runtime?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        In a Modular Monolith, all calls between modules are in-process function calls: they cannot fail due to network issues,
+        they have no latency, and they don't need retry logic. In microservices, every call crosses the network:
+        it can fail, timeout, or return partial data. This single difference drives most of the distributed systems complexity.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      8. What was the Bezos API Mandate, and what architectural outcome did it enable?
+      <span class="recall-tag r7d">RECALL-7D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        A 2002 internal directive requiring every Amazon team to expose data/functionality only via service APIs —
+        no direct function calls, no shared databases. Non-compliance meant firing. It enabled AWS: the internal
+        services built to serve Amazon.com (compute, storage, queuing) became products sold externally.
+        Organisational mandate → architectural outcome.
+      </p>
+    </details>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       INTERVIEW QUESTIONS
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Interview preparation</h2>
+
+  <div class="interview-tier">
+    <span class="tier-label t1">Tier 1 — Startup / Mid-Market</span>
+    <ul>
+      <li>What is a microservice? How is it different from a module in a monolith?</li>
+      <li>When would you choose a monolith over microservices?</li>
+      <li>What does "independently deployable" mean in practice?</li>
+      <li>Have you seen Conway's Law in action in a real codebase?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t2">Tier 2 — Senior Engineer (FAANG-Adjacent)</span>
+    <ul>
+      <li>Explain the Microservice Premium. Describe a situation where microservices are actively the wrong choice.</li>
+      <li>What is a distributed monolith? How does it happen and how do you detect it before it's too late?</li>
+      <li>Your team wants to split a 200k-line Express monolith into microservices. What is your very first step?</li>
+      <li>How does Conway's Law affect how you'd structure teams around a proposed service architecture?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t3">Tier 3 — Staff Engineer (FAANG)</span>
+    <ul>
+      <li>How do you evaluate whether a proposed service boundary is correct before you commit to building it?</li>
+      <li>Your org is moving to microservices but teams have not reorganised. Predict what will go wrong and how you'd address it architecturally.</li>
+      <li>Describe how Uber's DOMA approach addresses the "too many services" problem and what tradeoffs it introduces.</li>
+      <li>At what point in a company's evolution do microservices pay off? How would you measure that inflection point?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t4">Tier 4 — Production Scenario</span>
+    <ul>
+      <li>It's 2am. Service A is returning 503s. Monitoring shows it calls Service B → Service C → shared DB. Walk me through your diagnosis and what architectural changes you'd propose to prevent recurrence.</li>
+      <li>You've joined a team with 50 microservices and 5 engineers. Two engineers left last month. Nobody knows which service owns user session data. What do you do first?</li>
+    </ul>
+  </div>
+
+
+  <!-- Footer -->
+  <div class="lesson-footer">
+    <p>
+      <strong>Lesson 1 of 3 complete.</strong> You now have the mental model:
+      microservices are about <em>independent deployability</em> — everything else flows from that.
+    </p>
+    <p style="margin-top: 0.5rem;">
+      Complete the exercise above, then ask for <strong>Lesson 2: Bounded Contexts &amp; DDD</strong>.
+    </p>
+  </div>
+
+</body>
+</html>

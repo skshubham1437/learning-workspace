@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 01 — The UMPIRE Framework</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --fg: #1a1a1a;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --callout-bg: #fffbeb;
+      --callout-border: #f59e0b;
+      --success-bg: #ecfdf5;
+      --success-border: #10b981;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--serif);
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: var(--fg);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .lesson-number {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Headings ───────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    /* ── Body text ──────────────────────────── */
+    p { margin-bottom: 1.25rem; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+    ul, ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+
+    /* ── Callouts ───────────────────────────── */
+    .callout {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout-analogy { background: var(--callout-bg); border-color: var(--callout-border); }
+    .callout-key { background: var(--accent-light); border-color: var(--accent); }
+    .callout-success { background: var(--success-bg); border-color: var(--success-border); }
+    .callout-danger { background: var(--danger-bg); border-color: var(--danger-border); }
+    
+    .callout-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .callout-analogy .callout-label { color: #92400e; }
+    .callout-key .callout-label { color: var(--accent); }
+    .callout-success .callout-label { color: #047857; }
+    .callout-danger .callout-label { color: #b91c1c; }
+
+    /* ── Step-by-Step ───────────────────────── */
+    .step-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      background: white;
+      position: relative;
+    }
+    .step-letter {
+      position: absolute;
+      top: -15px;
+      left: -15px;
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 1.25rem;
+      border: 4px solid var(--bg);
+    }
+    .step-title {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--fg);
+    }
+
+    /* ── Retrieval Practice ─────────────────── */
+    .retrieval {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+    }
+    .retrieval h3 { margin-top: 0; font-family: var(--sans); color: var(--accent); }
+    .retrieval-question { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.75rem; font-style: italic; }
+    details { margin-bottom: 1rem; }
+    summary { font-family: var(--sans); font-size: 0.85rem; font-weight: 500; color: var(--accent); cursor: pointer; padding: 0.35rem 0; }
+    summary:hover { text-decoration: underline; }
+    details[open] summary { margin-bottom: 0.5rem; }
+    details p { font-size: 0.95rem; color: var(--muted); padding-left: 1rem; border-left: 2px solid var(--accent-light); }
+
+    /* ── Footer ─────────────────────────────── */
+    .lesson-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 01</div>
+  <h1>The UMPIRE Framework</h1>
+  <p class="subtitle">What to do when you look at a LeetCode problem and your mind goes blank.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Biggest Mistake in Coding Interviews</h2>
+  
+  <p>When most people are handed a coding problem, their instinct is to immediately start writing code. They read the prompt, panic slightly, and start typing a <code>for</code> loop hoping the solution will reveal itself along the way.</p>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">The Trap</span>
+    <p>Jumping straight to code is the fastest way to fail an interview. It leads to spaghetti code, missed edge cases, and awkward silence.</p>
+  </div>
+
+  <p>To fix the "I'm bad at problem solving" feeling, we don't start by learning complex tree algorithms. We start by learning a <strong>process</strong>. When you have a process, you don't need inspiration—you just follow the steps.</p>
+
+  <p>The industry standard process is called <strong>UMPIRE</strong>.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The UMPIRE Method</h2>
+
+  <div class="step-box" style="margin-top: 2.5rem;">
+    <div class="step-letter">U</div>
+    <div class="step-title">Understand</div>
+    <p><strong>Goal:</strong> Prove you know exactly what the problem is asking before you try to solve it.</p>
+    <ul>
+      <li>Read the problem.</li>
+      <li>Ask clarifying questions: <em>"Can the array be empty? Are there negative numbers? Does casing matter?"</em></li>
+      <li>Create your own simple test case: <em>"So if the input is [1,2,3], the output should be 6?"</em></li>
+    </ul>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">M</div>
+    <div class="step-title">Match</div>
+    <p><strong>Goal:</strong> Figure out what <em>category</em> of problem this is.</p>
+    <ul>
+      <li>Does this look like a problem you've seen before?</li>
+      <li>Do we need to search? Maybe a Hash Map. Do we need to compare ends of an array? Maybe Two Pointers.</li>
+      <li>You don't need the exact solution here, just the "vibe" of the tools you might need.</li>
+    </ul>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">P</div>
+    <div class="step-title">Plan</div>
+    <p><strong>Goal:</strong> Write out the logic in plain English (or pseudocode) <em>without writing actual code</em>.</p>
+    <ul>
+      <li>This is the most important step. Explain to the interviewer (or yourself): <em>"First, I will loop through the array. Second, I will check if the number exists in a hash map..."</em></li>
+      <li>If you get stuck here, that's fine! It's much easier to fix a broken English sentence than broken JavaScript.</li>
+    </ul>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">I</div>
+    <div class="step-title">Implement</div>
+    <p><strong>Goal:</strong> Translate your English plan into JavaScript.</p>
+    <ul>
+      <li><strong>Do not do this until the "Plan" is finished.</strong></li>
+      <li>If you did step P correctly, step I should just be typing. There should be zero heavy thinking here.</li>
+    </ul>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">R</div>
+    <div class="step-title">Review</div>
+    <p><strong>Goal:</strong> Catch your own bugs before the interviewer points them out.</p>
+    <ul>
+      <li>Pick a simple test case.</li>
+      <li>Read through your code line by line, acting as the computer. Keep track of what your variables equal at every step.</li>
+      <li>Do not just say "looks good." Actually trace the logic.</li>
+    </ul>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">E</div>
+    <div class="step-title">Evaluate</div>
+    <p><strong>Goal:</strong> Analyze how good your solution is.</p>
+    <ul>
+      <li>What is the Time Complexity? (How long does it take as the input grows?)</li>
+      <li>What is the Space Complexity? (How much extra memory does it use?)</li>
+    </ul>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Why This Works</h2>
+
+  <div class="callout callout-success">
+    <span class="callout-label">The Secret</span>
+    <p>Interviewers don't actually care about the final code as much as you think. They care about <strong>how you think</strong>.</p>
+  </div>
+
+  <p>If you immediately write perfect code in silence, they don't know if you're a genius or if you just memorized it. If you follow UMPIRE, even if you never finish the "Implement" step, they know you are a methodical, careful engineer who communicates well.</p>
+
+  <p>For the rest of this track, we will <em>never</em> jump straight to the code. We will always Understand and Plan first.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p>Try to answer these from memory to cement the framework.</p>
+    
+    <div class="retrieval-question">1. What is the most common trap people fall into when given a coding problem?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Jumping straight to writing code without fully understanding the problem or planning an approach.</p>
+    </details>
+
+    <div class="retrieval-question">2. What does UMPIRE stand for?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><strong>U</strong>nderstand, <strong>M</strong>atch, <strong>P</strong>lan, <strong>I</strong>mplement, <strong>R</strong>eview, <strong>E</strong>valuate.</p>
+    </details>
+
+    <div class="retrieval-question">3. What is the goal of the "Understand" phase?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>To clarify the prompt, ask questions about edge cases (like empty arrays or negative numbers), and create simple examples to verify the expected input/output.</p>
+    </details>
+
+    <div class="retrieval-question">4. Why is the "Plan" step so important before moving to "Implement"?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Because it's much easier to fix broken logic in plain English than it is to untangle broken JavaScript. If the plan is solid, the implementation is just typing.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 01 complete.</strong> You now have a weapon against the blank screen.</p>
+    <p style="margin-top: 0.5rem;">In the next lesson, we'll cover the final step of UMPIRE: <strong>Evaluate</strong>. We'll demystify Big O notation so you can confidently talk about Time and Space complexity without needing a math degree.</p>
+  </div>
+
+</body>
+</html>

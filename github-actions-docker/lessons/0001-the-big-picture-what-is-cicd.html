@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 01 — The Big Picture: What Is CI/CD?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --fg: #1a1a1a;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --callout-bg: #fffbeb;
+      --callout-border: #f59e0b;
+      --success-bg: #ecfdf5;
+      --success-border: #10b981;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--serif);
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: var(--fg);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .lesson-number {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Headings ───────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    /* ── Body text ──────────────────────────── */
+    p { margin-bottom: 1.25rem; }
+    
+    strong { font-weight: 600; }
+
+    em { font-style: italic; }
+
+    /* ── Lists ──────────────────────────────── */
+    ul, ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+
+    li { margin-bottom: 0.5rem; }
+
+    /* ── Code ───────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: inherit;
+    }
+
+    /* ── Callouts ───────────────────────────── */
+    .callout {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+
+    .callout p:last-child { margin-bottom: 0; }
+
+    .callout-analogy {
+      background: var(--callout-bg);
+      border-color: var(--callout-border);
+    }
+
+    .callout-key {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .callout-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+    }
+
+    .callout-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .callout-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .callout-analogy .callout-label { color: #92400e; }
+    .callout-key .callout-label { color: var(--accent); }
+    .callout-danger .callout-label { color: #b91c1c; }
+    .callout-success .callout-label { color: #047857; }
+
+    /* ── Diagram ────────────────────────────── */
+    .diagram {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .stage {
+      text-align: center;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 100px;
+      position: relative;
+    }
+
+    .stage-icon {
+      font-size: 1.5rem;
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .stage-ci {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 2px solid #93c5fd;
+    }
+
+    .stage-cd {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #6ee7b7;
+    }
+
+    .arrow {
+      font-size: 1.5rem;
+      color: var(--muted);
+      padding: 0 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .pipeline-label {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .ci-label { color: #2563eb; }
+    .cd-label { color: #059669; }
+
+    .pipeline-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .pipeline-stages {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .section-divider {
+      width: 2px;
+      height: 80px;
+      background: var(--border);
+      margin: 0 1rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Retrieval Practice ─────────────────── */
+    .retrieval {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+    }
+
+    .retrieval h3 {
+      margin-top: 0;
+      font-family: var(--sans);
+      color: var(--accent);
+    }
+
+    .retrieval-question {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      margin-bottom: 0.75rem;
+      font-style: italic;
+    }
+
+    .retrieval-reveal {
+      margin-top: 0.5rem;
+    }
+
+    details {
+      margin-bottom: 1rem;
+    }
+
+    summary {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0.35rem 0;
+    }
+
+    summary:hover { text-decoration: underline; }
+
+    details[open] summary { margin-bottom: 0.5rem; }
+
+    details p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      padding-left: 1rem;
+      border-left: 2px solid var(--accent-light);
+    }
+
+    /* ── Footer ─────────────────────────────── */
+    .lesson-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .next-lesson {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.6rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* ── Print ──────────────────────────────── */
+    @media print {
+      body { max-width: 100%; padding: 1rem; font-size: 1rem; }
+      .diagram { break-inside: avoid; }
+      .retrieval { break-inside: avoid; }
+      pre { white-space: pre-wrap; }
+    }
+
+    /* ── Mobile ─────────────────────────────── */
+    @media (max-width: 640px) {
+      body { padding: 1.5rem 1rem 4rem; font-size: 1rem; }
+      h1 { font-size: 1.75rem; }
+      .pipeline { flex-direction: column; }
+      .pipeline-section { width: 100%; }
+      .pipeline-stages { width: 100%; justify-content: center; }
+      .section-divider { width: 80px; height: 2px; margin: 0.75rem 0; }
+      .arrow { transform: rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 01</div>
+  <h1>The Big Picture: What Is CI/CD?</h1>
+  <p class="subtitle">Before touching any YAML or Docker commands, let's build the mental model that makes everything else click.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Problem CI/CD Solves</h2>
+  
+  <p>Imagine you're working on a team. You write code on your laptop. Your teammate writes code on theirs. At some point you both need to merge your changes, check that nothing broke, and get the result in front of users.</p>
+
+  <p>Without automation, this process looks like:</p>
+
+  <ol>
+    <li>Merge code manually and hope for the best</li>
+    <li>Run tests locally — if you remember to</li>
+    <li>Build the app on your machine — "works on my machine" 🤷</li>
+    <li>Copy files to a server via FTP or SSH</li>
+    <li>Pray nothing is different about the server's environment</li>
+  </ol>
+
+  <p>Every single one of these steps is a place where things can silently go wrong. <strong>CI/CD automates them so they can't be forgotten, skipped, or done inconsistently.</strong></p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Two Separate Ideas</h2>
+
+  <p>The term "CI/CD" glues two distinct concepts together. Let's pull them apart:</p>
+
+  <h3>CI — Continuous Integration</h3>
+  <p><strong>"Does the code work?"</strong></p>
+  <p>Every time someone pushes code, an automated system:</p>
+  <ul>
+    <li>Pulls the latest code</li>
+    <li>Installs dependencies</li>
+    <li>Runs linters (style checks)</li>
+    <li>Runs tests</li>
+    <li>Builds the application</li>
+  </ul>
+  <p>If any step fails, the team knows immediately — before the code reaches production. The key word is <em>continuous</em>: it happens on <em>every</em> change, not once a week.</p>
+
+  <h3>CD — Continuous Delivery / Deployment</h3>
+  <p><strong>"Get the working code to users."</strong></p>
+  <p>Once CI proves the code works, CD takes the built artifact and moves it toward production:</p>
+  <ul>
+    <li><strong>Continuous Delivery</strong> — the code is <em>ready</em> to deploy at any time (a human presses the button)</li>
+    <li><strong>Continuous Deployment</strong> — the code is <em>automatically</em> deployed (no human needed)</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Key distinction</span>
+    <p>CI answers "is it safe?" — CD answers "how does it reach users?" They're different concerns, and many teams start with CI only. That's perfectly fine.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Pipeline</h2>
+
+  <p>A CI/CD <strong>pipeline</strong> is the sequence of automated steps your code passes through. Here's what a typical pipeline looks like:</p>
+
+  <div class="diagram">
+    <div class="pipeline">
+      <div class="pipeline-section">
+        <div class="pipeline-label ci-label">← Continuous Integration →</div>
+        <div class="pipeline-stages">
+          <div class="stage stage-ci">
+            <span class="stage-icon">📥</span>
+            Checkout
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-ci">
+            <span class="stage-icon">📦</span>
+            Install
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-ci">
+            <span class="stage-icon">🔍</span>
+            Lint
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-ci">
+            <span class="stage-icon">✅</span>
+            Test
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-ci">
+            <span class="stage-icon">🔨</span>
+            Build
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="pipeline-section">
+        <div class="pipeline-label cd-label">← Continuous Delivery →</div>
+        <div class="pipeline-stages">
+          <div class="stage stage-cd">
+            <span class="stage-icon">🐳</span>
+            Package
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-cd">
+            <span class="stage-icon">📤</span>
+            Push
+          </div>
+          <span class="arrow">→</span>
+          <div class="stage stage-cd">
+            <span class="stage-icon">🚀</span>
+            Deploy
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>Notice how the left side (CI) is about <em>validating</em> and the right side (CD) is about <em>delivering</em>. The pipeline only moves right if the left side passes.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Where Docker Fits In</h2>
+
+  <p>Docker solves the "works on my machine" problem. Instead of deploying raw files and hoping the server has the right version of Node, Go, or nginx installed, you <strong>package your entire application — code, dependencies, runtime — into a container image</strong>.</p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Analogy</span>
+    <p>Think of a container image like a <strong>shipping container</strong> (that's actually where the name comes from). It doesn't matter what's inside — the crane, the truck, and the ship all handle it the same way. Similarly, a Docker container runs the same way on your laptop, in CI, and in production.</p>
+  </div>
+
+  <p>In a CI/CD pipeline, Docker typically appears in two places:</p>
+
+  <ol>
+    <li><strong>As the build environment</strong> — CI runs your tests <em>inside</em> a container so the environment is guaranteed identical every time</li>
+    <li><strong>As the deployment artifact</strong> — instead of deploying files, you build a Docker image and push it to a <em>registry</em> (like Docker Hub or GitHub Container Registry), then the server pulls and runs that image</li>
+  </ol>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Where GitHub Actions Fits In</h2>
+
+  <p>GitHub Actions is the <strong>orchestrator</strong> — it's the engine that runs your pipeline. When you push code to GitHub, Actions reads a YAML file in your repository and executes the steps you defined.</p>
+
+  <p>The key concepts (we'll go deep on these in future lessons):</p>
+
+  <ul>
+    <li><strong>Workflow</strong> — a YAML file that defines your pipeline (lives in <code>.github/workflows/</code>)</li>
+    <li><strong>Trigger</strong> — what starts the workflow (e.g., a push, a pull request, a schedule)</li>
+    <li><strong>Job</strong> — a group of steps that run on the same machine</li>
+    <li><strong>Step</strong> — a single command or action within a job</li>
+    <li><strong>Runner</strong> — the machine (virtual, provided by GitHub) where your job executes</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Mental model</span>
+    <p><strong>GitHub Actions = the automation engine.</strong><br>
+       <strong>Docker = the packaging format.</strong><br>
+       <strong>Your code = the thing being automated and packaged.</strong><br>
+       They're three layers of the same system, not competing alternatives.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>How This Applies to Your Three Stacks</h2>
+
+  <p>The pipeline pattern is the same for every stack — only the <em>build commands</em> and <em>Dockerfile instructions</em> change:</p>
+
+  <div class="diagram">
+    <table style="width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.85rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border);">
+          <th style="text-align: left; padding: 0.75rem 1rem; color: var(--muted);">Stack</th>
+          <th style="text-align: left; padding: 0.75rem 1rem; color: var(--muted);">CI: Test</th>
+          <th style="text-align: left; padding: 0.75rem 1rem; color: var(--muted);">CI: Build</th>
+          <th style="text-align: left; padding: 0.75rem 1rem; color: var(--muted);">Docker: Final image</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.75rem 1rem;"><strong>React</strong></td>
+          <td style="padding: 0.75rem 1rem;"><code>npm test</code></td>
+          <td style="padding: 0.75rem 1rem;"><code>npm run build</code> → static files</td>
+          <td style="padding: 0.75rem 1rem;">nginx serving <code>/dist</code></td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.75rem 1rem;"><strong>Node/Express</strong></td>
+          <td style="padding: 0.75rem 1rem;"><code>npm test</code></td>
+          <td style="padding: 0.75rem 1rem;">No compile step (interpreted)</td>
+          <td style="padding: 0.75rem 1rem;">node running <code>server.js</code></td>
+        </tr>
+        <tr>
+          <td style="padding: 0.75rem 1rem;"><strong>Go</strong></td>
+          <td style="padding: 0.75rem 1rem;"><code>go test ./...</code></td>
+          <td style="padding: 0.75rem 1rem;"><code>go build</code> → single binary</td>
+          <td style="padding: 0.75rem 1rem;">Tiny alpine running the binary</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Notice the pattern: the <em>pipeline shape</em> is identical. Only the commands inside each stage change. This is why understanding the model matters more than memorising YAML — once you get the model, every stack is just filling in blanks.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>What You Don't Need to Know Yet</h2>
+
+  <p>It's just as important to know what we're <em>not</em> covering yet:</p>
+
+  <ul>
+    <li>❌ Kubernetes — that's orchestration of <em>many</em> containers. We're learning one container first.</li>
+    <li>❌ Cloud-specific deployment (AWS, GCP, Azure) — we'll stay cloud-agnostic.</li>
+    <li>❌ Advanced security (OIDC tokens, supply-chain signing) — awareness only for now.</li>
+    <li>❌ Other CI systems (Jenkins, GitLab CI) — GitHub Actions is our focus.</li>
+  </ul>
+
+  <div class="callout callout-success">
+    <span class="callout-label">What you now know</span>
+    <p>You have the mental model: <strong>CI validates, CD delivers, Docker packages, GitHub Actions orchestrates.</strong> Every lesson from here will be filling in detail within this frame.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p>Try to answer these from memory before revealing the answers. This is where real learning happens — it should feel slightly effortful.</p>
+    
+    <div class="retrieval-question">1. What is the difference between Continuous Delivery and Continuous Deployment?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Continuous Delivery means the code is always <em>ready</em> to deploy — a human makes the final call. Continuous Deployment means it goes out automatically with no human gate. Delivery is the safer starting point.</p>
+    </details>
+
+    <div class="retrieval-question">2. In a CI/CD pipeline, where does Docker typically appear? (Name two places.)</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>(1) As the <strong>build/test environment</strong> — CI runs inside a container for consistency. (2) As the <strong>deployment artifact</strong> — you build a Docker image and push it to a registry, then the server pulls and runs it.</p>
+    </details>
+
+    <div class="retrieval-question">3. A React app, a Node/Express app, and a Go app all go through the same CI/CD pipeline. What stays the same and what changes?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>The <strong>pipeline shape</strong> stays the same (checkout → install → lint → test → build → package → push → deploy). The <strong>commands inside each stage</strong> change (e.g., <code>npm test</code> vs. <code>go test</code>, nginx image vs. alpine image).</p>
+    </details>
+
+    <div class="retrieval-question">4. What problem does Docker solve that raw file deployment doesn't?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Docker eliminates "works on my machine" by packaging the application <em>and its entire environment</em> (runtime, dependencies, OS libraries) into a single portable image. The same image runs identically everywhere.</p>
+    </details>
+
+    <div class="retrieval-question">5. Name the five key GitHub Actions concepts (the hierarchy from top to bottom).</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><strong>Workflow</strong> (the YAML file) → triggered by a <strong>Trigger</strong> (push, PR) → contains <strong>Jobs</strong> (groups of steps on one machine) → each job has <strong>Steps</strong> (commands/actions) → each job runs on a <strong>Runner</strong> (GitHub's virtual machine).</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 01 complete.</strong> You've built the conceptual frame. Next, we'll zoom into Docker — what containers and images actually are, and how to write your first Dockerfile.</p>
+    <p style="margin-top: 0.5rem;">When you're ready, ask for <strong>Lesson 02: What Docker Actually Is</strong>.</p>
+  </div>
+
+</body>
+</html>

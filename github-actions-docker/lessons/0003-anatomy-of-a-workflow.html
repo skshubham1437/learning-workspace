@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 03 — Anatomy of a GitHub Actions Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --fg: #1a1a1a;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --callout-bg: #fffbeb;
+      --callout-border: #f59e0b;
+      --success-bg: #ecfdf5;
+      --success-border: #10b981;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--serif);
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: var(--fg);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .lesson-number {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Headings ───────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    /* ── Body text ──────────────────────────── */
+    p { margin-bottom: 1.25rem; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+    ul, ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+
+    /* ── Code ───────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    pre code { background: none; padding: 0; font-size: 0.85rem; color: inherit; }
+
+    .code-comment { color: #94a3b8; font-style: italic; }
+    .code-keyword { color: #cba6f7; }
+    .code-string { color: #a6e3a1; }
+    .code-variable { color: #89b4fa; }
+
+    /* ── Callouts ───────────────────────────── */
+    .callout {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout-analogy { background: var(--callout-bg); border-color: var(--callout-border); }
+    .callout-key { background: var(--accent-light); border-color: var(--accent); }
+    .callout-success { background: var(--success-bg); border-color: var(--success-border); }
+    .callout-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .callout-analogy .callout-label { color: #92400e; }
+    .callout-key .callout-label { color: var(--accent); }
+    .callout-success .callout-label { color: #047857; }
+
+    /* ── Hierarchy Diagram ──────────────────── */
+    .hierarchy {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      font-family: var(--sans);
+    }
+    
+    .hier-item { border: 2px solid; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; }
+    .hier-workflow { border-color: #3b82f6; background: #eff6ff; }
+    .hier-job { border-color: #8b5cf6; background: #f5f3ff; margin-left: 2rem; }
+    .hier-step { border-color: #10b981; background: #ecfdf5; margin-left: 4rem; margin-bottom: 0.5rem; padding: 0.5rem; font-size: 0.9rem; }
+    
+    .hier-title { font-weight: 600; margin-bottom: 0.25rem; font-size: 0.95rem; }
+    .hier-desc { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── Retrieval Practice ─────────────────── */
+    .retrieval {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+    }
+    .retrieval h3 { margin-top: 0; font-family: var(--sans); color: var(--accent); }
+    .retrieval-question { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.75rem; font-style: italic; }
+    details { margin-bottom: 1rem; }
+    summary { font-family: var(--sans); font-size: 0.85rem; font-weight: 500; color: var(--accent); cursor: pointer; padding: 0.35rem 0; }
+    summary:hover { text-decoration: underline; }
+    details[open] summary { margin-bottom: 0.5rem; }
+    details p { font-size: 0.95rem; color: var(--muted); padding-left: 1rem; border-left: 2px solid var(--accent-light); }
+
+    /* ── Footer ─────────────────────────────── */
+    .lesson-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 03</div>
+  <h1>Anatomy of a GitHub Actions Workflow</h1>
+  <p class="subtitle">Triggers, jobs, steps, and runners: translating the CI/CD pipeline into YAML.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Big Picture (Recap)</h2>
+  
+  <p>In Phase 1, we learned that GitHub Actions is the <strong>orchestrator</strong>. It's the engine that listens for events (like a code push) and executes your pipeline (linting, testing, building).</p>
+
+  <p>We tell GitHub Actions what to do by writing a <strong>Workflow</strong> file in YAML format. It must be placed in a very specific folder: <code>.github/workflows/</code> at the root of your repository.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Hierarchy</h2>
+
+  <p>Every workflow is built from a strict hierarchy of four concepts:</p>
+
+  <div class="hierarchy">
+    <div class="hier-item hier-workflow">
+      <div class="hier-title">1. Workflow (The Pipeline)</div>
+      <div class="hier-desc">A single YAML file triggered by an event (e.g., "Push to main branch").</div>
+    </div>
+    
+    <div class="hier-item hier-job">
+      <div class="hier-title">2. Job (The Environment)</div>
+      <div class="hier-desc">A grouping of steps that execute on the same <strong>Runner</strong> (a virtual machine, like Ubuntu). Jobs run in <em>parallel</em> by default.</div>
+    </div>
+    
+    <div class="hier-item hier-step">
+      <div class="hier-title">3. Step (The Action)</div>
+      <div class="hier-desc">Runs a pre-built Action (e.g., "Checkout code").</div>
+    </div>
+    
+    <div class="hier-item hier-step">
+      <div class="hier-title">3. Step (The Action)</div>
+      <div class="hier-desc">Runs a shell command (e.g., <code>npm test</code>).</div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Reading the YAML</h2>
+
+  <p>Let's look at a real, bare-bones workflow that tests a Node.js app on every push to the <code>main</code> branch.</p>
+
+<pre><code><span class="code-keyword">name:</span> <span class="code-string">"Node.js CI"</span>
+
+<span class="code-comment"># 1. THE TRIGGER</span>
+<span class="code-keyword">on:</span>
+  <span class="code-keyword">push:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+
+<span class="code-comment"># 2. THE JOBS</span>
+<span class="code-keyword">jobs:</span>
+  <span class="code-variable">test-app:</span>
+    <span class="code-comment"># 3. THE RUNNER</span>
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+
+    <span class="code-comment"># 4. THE STEPS</span>
+    <span class="code-keyword">steps:</span>
+      <span class="code-comment"># Step A: Get the code</span>
+      - <span class="code-keyword">name:</span> Checkout repository
+        <span class="code-keyword">uses:</span> actions/checkout@v4
+
+      <span class="code-comment"># Step B: Install Node.js</span>
+      - <span class="code-keyword">name:</span> Setup Node.js
+        <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> <span class="code-string">'20'</span>
+
+      <span class="code-comment"># Step C: Install dependencies</span>
+      - <span class="code-keyword">name:</span> Install dependencies
+        <span class="code-keyword">run:</span> npm ci
+
+      <span class="code-comment"># Step D: Run tests</span>
+      - <span class="code-keyword">name:</span> Run tests
+        <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <h3>Let's break it down:</h3>
+
+  <p><strong>1. The Trigger (<code>on:</code>)</strong><br>
+  This tells GitHub <em>when</em> to run the workflow. Here, it runs whenever someone pushes to the <code>main</code> branch. You can also trigger on Pull Requests (<code>pull_request:</code>), on a schedule (like a cron job), or even manually (<code>workflow_dispatch:</code>).</p>
+
+  <p><strong>2. The Jobs (<code>jobs:</code>)</strong><br>
+  We defined one job named <code>test-app</code>. If we had another job called <code>deploy-app</code>, GitHub would try to run them both at the same time (in parallel) unless we explicitly told it to wait.</p>
+
+  <p><strong>3. The Runner (<code>runs-on:</code>)</strong><br>
+  <code>ubuntu-latest</code> tells GitHub: "Please spin up a fresh, empty Ubuntu Linux virtual machine to run my job." Every time this job runs, it gets a completely brand new, clean machine.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Crucial Concept</span>
+    <p>Because the runner is a fresh machine every time, <strong>your code isn't there yet</strong>. Neither is Node.js, Go, or your dependencies. You have to explicitly instruct the runner to download your code and set up the environment.</p>
+  </div>
+
+  <p><strong>4. The Steps (<code>steps:</code>)</strong><br>
+  Steps execute sequentially on the runner. There are two types of steps:</p>
+
+  <ul>
+    <li><code>uses:</code> — This runs a pre-packaged "Action" written by the community or GitHub. 
+      <br><em>Example:</em> <code>actions/checkout@v4</code> is a magic script that runs <code>git clone</code> and downloads your repo into the runner. You almost always need this as your first step!</li>
+    <li><code>run:</code> — This simply executes a terminal command on the runner, exactly as if you typed it on your laptop. 
+      <br><em>Example:</em> <code>npm ci</code> (clean install) or <code>go build</code>.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Why `actions/checkout`?</h2>
+
+  <p>This is the most common point of confusion for beginners. They write a step that says <code>run: npm test</code> and the workflow fails with "File not found."</p>
+
+  <p>Remember: the workflow is just a script running on a cloud server somewhere. That server knows <em>nothing</em> about your repository until you tell it to download it. <code>actions/checkout</code> bridges that gap.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    
+    <div class="retrieval-question">1. In which exact folder must you place your workflow YAML files for GitHub to detect them?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>.github/workflows/</code> at the root of your repository.</p>
+    </details>
+
+    <div class="retrieval-question">2. What happens if you put two jobs (e.g., `test` and `lint`) under the `jobs:` section? Do they run sequentially or in parallel by default?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>They run in <strong>parallel</strong> by default. Each job gets its own separate runner machine.</p>
+    </details>
+
+    <div class="retrieval-question">3. What is the difference between `uses:` and `run:` in a step?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>uses:</code> executes a pre-built Action from the community (like a plugin), while <code>run:</code> executes a raw shell command (like `npm test`) on the runner.</p>
+    </details>
+
+    <div class="retrieval-question">4. Why is `actions/checkout` almost always the first step in a job?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Because the runner starts as a completely empty, fresh virtual machine. If you don't checkout (download) your code first, none of your subsequent steps will have anything to build or test.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 03 complete.</strong> You now understand the basic building blocks of a GitHub Actions YAML file.</p>
+    <p style="margin-top: 0.5rem;">Next, we'll get our hands dirty. In Lesson 4, we will write our first actual pipeline to lint and test a simple Node.js app. Let me know when you're ready!</p>
+  </div>
+
+</body>
+</html>

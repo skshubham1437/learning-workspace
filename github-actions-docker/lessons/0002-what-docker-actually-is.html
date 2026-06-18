@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 02 — What Docker Actually Is</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --fg: #1a1a1a;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --callout-bg: #fffbeb;
+      --callout-border: #f59e0b;
+      --success-bg: #ecfdf5;
+      --success-border: #10b981;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--serif);
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: var(--fg);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .lesson-number {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 2.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Headings ───────────────────────────── */
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    /* ── Body text ──────────────────────────── */
+    p { margin-bottom: 1.25rem; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+    ul, ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+
+    /* ── Code ───────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    pre code { background: none; padding: 0; font-size: 0.85rem; color: inherit; }
+
+    /* ── Callouts ───────────────────────────── */
+    .callout {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout-analogy { background: var(--callout-bg); border-color: var(--callout-border); }
+    .callout-key { background: var(--accent-light); border-color: var(--accent); }
+    .callout-success { background: var(--success-bg); border-color: var(--success-border); }
+    .callout-label {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .callout-analogy .callout-label { color: #92400e; }
+    .callout-key .callout-label { color: var(--accent); }
+    .callout-success .callout-label { color: #047857; }
+
+    /* ── Diagram ────────────────────────────── */
+    .diagram {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .box {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      min-width: 150px;
+    }
+
+    .box-title {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--fg);
+    }
+
+    .box-layer {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      font-family: var(--sans);
+    }
+
+    /* ── Retrieval Practice ─────────────────── */
+    .retrieval {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+    }
+    .retrieval h3 { margin-top: 0; font-family: var(--sans); color: var(--accent); }
+    .retrieval-question { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.75rem; font-style: italic; }
+    details { margin-bottom: 1rem; }
+    summary { font-family: var(--sans); font-size: 0.85rem; font-weight: 500; color: var(--accent); cursor: pointer; padding: 0.35rem 0; }
+    summary:hover { text-decoration: underline; }
+    details[open] summary { margin-bottom: 0.5rem; }
+    details p { font-size: 0.95rem; color: var(--muted); padding-left: 1rem; border-left: 2px solid var(--accent-light); }
+
+    /* ── Footer ─────────────────────────────── */
+    .lesson-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 02</div>
+  <h1>What Docker Actually Is</h1>
+  <p class="subtitle">Demystifying containers, images, and the Dockerfile.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The "Works on My Machine" Problem</h2>
+  
+  <p>In Lesson 1, we learned that Docker solves the "works on my machine" problem by packaging the application <em>and its environment</em> together. But what does that actually mean?</p>
+
+  <p>If you build a Node.js app on your Mac, it depends on:</p>
+  <ul>
+    <li>The exact version of Node.js installed on your Mac</li>
+    <li>The exact versions of dependencies in your <code>node_modules</code></li>
+    <li>Underlying C++ libraries on macOS (if any packages compile native bindings)</li>
+    <li>Environment variables you've set locally</li>
+  </ul>
+
+  <p>If the deployment server runs Ubuntu and has a slightly older version of Node, your app might crash. Docker fixes this by letting you define the <strong>entire OS environment</strong> in code.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Containers vs. Virtual Machines</h2>
+
+  <p>To isolate an app, we used to use Virtual Machines (VMs). A VM simulates an entire computer. It has its own kernel (the core of the OS), its own memory management, and its own hard drive. Running 5 VMs means running 5 full operating systems.</p>
+
+  <p><strong>Containers are different.</strong> They share the host machine's kernel, but isolate the processes, networking, and file system. They are incredibly lightweight. You can start a container in a fraction of a second, whereas a VM takes minutes to boot.</p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Analogy</span>
+    <p>A <strong>Virtual Machine</strong> is like buying a whole separate house for every person. It's fully isolated, but extremely expensive and takes up a lot of space.</p>
+    <p>A <strong>Container</strong> is like living in an apartment building. Everyone shares the same foundation and plumbing (the kernel), but you have your own locked door, your own furniture, and your own space.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Images vs. Containers</h2>
+
+  <p>These two terms are often used interchangeably, but they are fundamentally different:</p>
+
+  <ul>
+    <li>An <strong>Image</strong> is the blueprint. It is a read-only template that contains the OS, the runtime (like Node or Go), your code, and your dependencies. Once built, an image never changes.</li>
+    <li>A <strong>Container</strong> is a running instance of an image. If the image is the blueprint, the container is the house built from it. You can start 10 containers from a single image.</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Key distinction</span>
+    <p>You <strong>build</strong> an image. You <strong>run</strong> a container.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Dockerfile: Writing the Recipe</h2>
+
+  <p>How do we create an image? We write a <code>Dockerfile</code>. It is simply a list of instructions telling Docker how to assemble the image, step by step.</p>
+
+  <p>Here is a basic Dockerfile for a Node/Express app:</p>
+
+<pre><code># 1. Start from a base image (an OS with Node already installed)
+FROM node:20-alpine
+
+# 2. Set the working directory inside the container
+WORKDIR /app
+
+# 3. Copy only the package files first
+COPY package.json package-lock.json ./
+
+# 4. Install dependencies
+RUN npm install
+
+# 5. Copy the rest of the application code
+COPY . .
+
+# 6. Specify the command to run when the container starts
+CMD ["node", "server.js"]</code></pre>
+
+  <h3>The Core Instructions</h3>
+  <ul>
+    <li><code>FROM</code>: The foundation. Always the first line. <code>node:20-alpine</code> means "give me a tiny Linux OS (Alpine) with Node v20 pre-installed."</li>
+    <li><code>WORKDIR</code>: Like running <code>cd /app</code>. All subsequent commands run in this folder.</li>
+    <li><code>COPY</code>: Copies files from your laptop into the image.</li>
+    <li><code>RUN</code>: Executes a command <em>during the build process</em> (e.g., installing packages).</li>
+    <li><code>CMD</code>: The default command that runs <em>when a container starts up</em>.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Layers and Caching: Why Order Matters</h2>
+
+  <p>Docker images are built in <strong>layers</strong>. Every instruction in a Dockerfile creates a new layer on top of the previous one. Docker caches these layers to make future builds incredibly fast.</p>
+
+  <p>If you change a line of code in <code>server.js</code>, Docker looks at the Dockerfile top-to-bottom. It will re-use the cached layers for <code>FROM</code>, <code>WORKDIR</code>, <code>COPY package.json</code>, and <code>RUN npm install</code> because those haven't changed. It only rebuilds from the <code>COPY . .</code> line downwards.</p>
+
+  <div class="diagram">
+    <div class="box">
+      <div class="box-title">Build 1 (Everything new)</div>
+      <div class="box-layer" style="border-color: var(--accent);">Layer 1: FROM node:20</div>
+      <div class="box-layer" style="border-color: var(--accent);">Layer 2: COPY package.json</div>
+      <div class="box-layer" style="border-color: var(--accent);">Layer 3: RUN npm install</div>
+      <div class="box-layer" style="border-color: var(--accent);">Layer 4: COPY . .</div>
+    </div>
+    <div class="box">
+      <div class="box-title">Build 2 (Changed server.js)</div>
+      <div class="box-layer" style="background: var(--success-bg);">Layer 1: (Cached)</div>
+      <div class="box-layer" style="background: var(--success-bg);">Layer 2: (Cached)</div>
+      <div class="box-layer" style="background: var(--success-bg);">Layer 3: (Cached)</div>
+      <div class="box-layer" style="border-color: var(--accent);">Layer 4: COPY . . (Rebuilt)</div>
+    </div>
+  </div>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The Golden Rule of Dockerfiles</span>
+    <p>Always put the things that change <strong>least often</strong> at the top, and the things that change <strong>most often</strong> at the bottom. This is why we copy <code>package.json</code> and run <code>npm install</code> <em>before</em> we copy the rest of the source code!</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p>Try to answer these from memory before revealing the answers.</p>
+    
+    <div class="retrieval-question">1. What is the difference between an Image and a Container?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>An image is the read-only blueprint (the recipe). A container is the running instance of that image (the actual running process). You build an image, and you run a container.</p>
+    </details>
+
+    <div class="retrieval-question">2. What is the difference between the <code>RUN</code> instruction and the <code>CMD</code> instruction?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>RUN</code> executes commands <em>during the build process</em> to assemble the image (like <code>npm install</code>). <code>CMD</code> specifies the default command that runs <em>when a container is started</em> from the image (like <code>node server.js</code>).</p>
+    </details>
+
+    <div class="retrieval-question">3. Why do we copy `package.json` and run `npm install` BEFORE copying the rest of the source code?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>Because of Docker layer caching. Source code changes frequently, but dependencies change rarely. By installing dependencies first, Docker can cache the heavy <code>npm install</code> step, making subsequent builds where you only changed code much faster.</p>
+    </details>
+
+    <div class="retrieval-question">4. Why is a container much faster to start than a Virtual Machine?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>A VM has to boot up a full separate operating system and kernel. A container shares the host machine's kernel and only isolates the application process, so it starts almost instantly.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 02 complete.</strong> You now understand images, containers, the Dockerfile, and the magic of layer caching.</p>
+    <p style="margin-top: 0.5rem;">Next, let's put this into practice by looking at how we write a specific Dockerfile for a React app, a Node app, and a Go app. Let me know when you're ready to proceed to Lesson 3!</p>
+  </div>
+
+</body>
+</html>
