@@ -39,3 +39,16 @@ A text document containing all the instructions (`FROM`, `COPY`, `RUN`, etc.) ne
 
 **Layer**:
 A set of file system changes created by a single instruction in a Dockerfile. Docker caches these layers to drastically speed up future builds.
+
+## GitHub Actions Concepts
+
+**Action**:
+A reusable, pre-packaged unit of automation that a step invokes via `uses:`. Published by the community or by GitHub (e.g., `actions/checkout@v4`).
+_Avoid_: Confusing with "step" — an Action is what a step *runs*; the step is the container for it
+
+**Step**:
+A single task within a job, executed sequentially. Either runs a pre-built Action (`uses:`) or a shell command (`run:`).
+_Avoid_: Confusing with "job" — steps within a job share the same runner; jobs do not
+
+**Trigger (Event)**:
+The condition declared under `on:` that causes a workflow to run. Examples: `push`, `pull_request`, `schedule`, `workflow_dispatch`.

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 04 — Your First CI Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0003-anatomy-of-a-workflow.html">← Lesson 03</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 04</div>
+  <h1>Your First CI Pipeline</h1>
+  <p class="subtitle">Write a real workflow that lints and tests a Node.js app — and learn why <code>needs:</code> is not <code>uses:</code>.</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions">Workflow Syntax Reference</a> — the single most important page in the GitHub Actions docs. Bookmark it.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>One Thing to Fix First</h2>
+
+  <p>After Lesson 3, I asked how to make one job wait for another. You said <code>uses: lint</code>. The instinct was exactly right — job B should declare a dependency on job A. But the keyword is <strong><code>needs:</code></strong>, not <code>uses:</code>.</p>
+
+  <p>These two keywords live at different levels and mean completely different things:</p>
+
+  <table>
+    <thead>
+      <tr><th>Keyword</th><th>Lives on a…</th><th>Means</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>uses:</code></td><td>Step</td><td>"Load this pre-built Action" (a plugin)</td></tr>
+      <tr><td><code>needs:</code></td><td>Job</td><td>"Wait for this other job to finish"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Mnemonic</span>
+    <p>A step <em>uses</em> a tool. A job <em>needs</em> another job to go first.</p>
+  </div>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Vocabulary Check</span>
+    <p>We keep saying "pipeline" and "workflow." Quick distinction: a <strong>pipeline</strong> is the abstract idea — the sequence of stages code passes through. A <strong>workflow</strong> is GitHub Actions' concrete implementation of that idea — a YAML file in <code>.github/workflows/</code>. When someone says "write a CI pipeline," they mean "write a workflow file."</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The App</h2>
+
+  <p>We need a small, real Node.js project to run our pipeline against. Here's the minimal structure:</p>
+
+<pre><code>my-node-app/
+├── .github/
+│   └── workflows/
+│       └── ci.yml          <span class="code-comment"># our workflow</span>
+├── src/
+│   └── math.js             <span class="code-comment"># a tiny module</span>
+├── tests/
+│   └── math.test.js        <span class="code-comment"># a test for it</span>
+├── package.json
+└── .eslintrc.json</code></pre>
+
+  <h3>src/math.js</h3>
+
+<pre><code><span class="code-keyword">function</span> <span class="code-variable">add</span>(a, b) {
+  <span class="code-keyword">return</span> a + b;
+}
+
+<span class="code-keyword">function</span> <span class="code-variable">multiply</span>(a, b) {
+  <span class="code-keyword">return</span> a * b;
+}
+
+module.exports = { add, multiply };</code></pre>
+
+  <h3>tests/math.test.js</h3>
+
+<pre><code><span class="code-keyword">const</span> { describe, it } = require(<span class="code-string">'node:test'</span>);
+<span class="code-keyword">const</span> assert = require(<span class="code-string">'node:assert'</span>);
+<span class="code-keyword">const</span> { add, multiply } = require(<span class="code-string">'../src/math'</span>);
+
+describe(<span class="code-string">'math'</span>, () =&gt; {
+  it(<span class="code-string">'adds two numbers'</span>, () =&gt; {
+    assert.strictEqual(add(2, 3), 5);
+  });
+
+  it(<span class="code-string">'multiplies two numbers'</span>, () =&gt; {
+    assert.strictEqual(multiply(4, 5), 20);
+  });
+});</code></pre>
+
+  <p>We're using Node's <a href="https://nodejs.org/docs/latest-v20.x/api/test.html">built-in test runner</a> (available since Node 20) — no Jest or Mocha needed.</p>
+
+  <h3>package.json</h3>
+
+<pre><code>{
+  <span class="code-string">"name"</span>: <span class="code-string">"my-node-app"</span>,
+  <span class="code-string">"scripts"</span>: {
+    <span class="code-string">"test"</span>: <span class="code-string">"node --test tests/"</span>,
+    <span class="code-string">"lint"</span>: <span class="code-string">"eslint src/"</span>
+  },
+  <span class="code-string">"devDependencies"</span>: {
+    <span class="code-string">"eslint"</span>: <span class="code-string">"^8.56.0"</span>
+  }
+}</code></pre>
+
+  <h3>.eslintrc.json</h3>
+
+<pre><code>{
+  <span class="code-string">"env"</span>: { <span class="code-string">"node"</span>: <span class="code-keyword">true</span>, <span class="code-string">"es2022"</span>: <span class="code-keyword">true</span> },
+  <span class="code-string">"rules"</span>: {
+    <span class="code-string">"no-unused-vars"</span>: <span class="code-string">"error"</span>,
+    <span class="code-string">"no-undef"</span>: <span class="code-string">"error"</span>
+  }
+}</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Workflow</h2>
+
+  <p>Now the main event. This workflow runs on every push to <code>main</code> <em>and</em> on every pull request targeting <code>main</code>. It has two jobs: <strong>lint</strong> first, then <strong>test</strong>.</p>
+
+<pre><code><span class="code-keyword">name:</span> <span class="code-string">"CI"</span>
+
+<span class="code-keyword">on:</span>
+  <span class="code-keyword">push:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+  <span class="code-keyword">pull_request:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+
+<span class="code-keyword">jobs:</span>
+  <span class="code-variable">lint:</span>
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">name:</span> Checkout code
+        <span class="code-keyword">uses:</span> actions/checkout@v4
+
+      - <span class="code-keyword">name:</span> Setup Node.js
+        <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> <span class="code-string">'20'</span>
+
+      - <span class="code-keyword">name:</span> Install dependencies
+        <span class="code-keyword">run:</span> npm ci
+
+      - <span class="code-keyword">name:</span> Run linter
+        <span class="code-keyword">run:</span> npm run lint
+
+  <span class="code-variable">test:</span>
+    <span class="code-keyword">needs:</span> lint              <span class="code-comment"># ← waits for 'lint' to pass</span>
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">name:</span> Checkout code
+        <span class="code-keyword">uses:</span> actions/checkout@v4
+
+      - <span class="code-keyword">name:</span> Setup Node.js
+        <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> <span class="code-string">'20'</span>
+
+      - <span class="code-keyword">name:</span> Install dependencies
+        <span class="code-keyword">run:</span> npm ci
+
+      - <span class="code-keyword">name:</span> Run tests
+        <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <p>Notice the two triggers under <code>on:</code>. Running on <code>push</code> validates code <em>after</em> it lands on <code>main</code>. Running on <code>pull_request</code> validates code <em>before</em> it merges — acting as a gate. Together, they form a safety net.</p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Why npm ci?</span>
+    <p>You'll notice we use <code>npm ci</code> instead of <code>npm install</code>. In CI, you want a <strong>clean, deterministic install</strong> from your lockfile (<code>package-lock.json</code>). <code>npm ci</code> does exactly that — it deletes <code>node_modules/</code>, installs only what the lockfile says, and never modifies the lockfile. It's faster and more predictable. Always prefer <code>npm ci</code> in pipelines.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Gotcha: Job Isolation</h2>
+
+  <p>Look at the workflow above. Both <code>lint</code> and <code>test</code> do the exact same setup: checkout → setup Node → install dependencies. That's not a mistake — it's a consequence of a fundamental rule:</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Crucial Concept</span>
+    <p>Every job gets its own <strong>fresh, isolated runner</strong>. The <code>needs:</code> keyword controls <em>ordering</em>, not <em>sharing</em>. Job B waits for job A to succeed — but job B still starts on a brand new, empty machine.</p>
+  </div>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Analogy</span>
+    <p>Imagine two kitchens in different buildings. You can tell Kitchen B to wait until Kitchen A finishes — but you still have to send the ingredients and recipe to both kitchens separately.</p>
+  </div>
+
+  <p>This means if a job needs your code, it <strong>must</strong> check it out. Every. Single. Time.</p>
+
+  <p><small>(There <em>are</em> ways to share files between jobs using <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-and-sharing-data-from-a-workflow">artifacts</a>, but that's an advanced topic for later.)</small></p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>🔍 Spot the Bugs</h2>
+
+  <p>This workflow has <strong>two bugs</strong>. Try to find them before revealing the answers.</p>
+
+<pre><code><span class="code-keyword">name:</span> <span class="code-string">"CI"</span>
+
+<span class="code-keyword">on:</span>
+  <span class="code-keyword">push:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+
+<span class="code-keyword">jobs:</span>
+  <span class="code-variable">lint:</span>
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">uses:</span> actions/checkout@v4
+      - <span class="code-keyword">run:</span> npm run lint
+
+  <span class="code-variable">test:</span>
+    <span class="code-keyword">uses:</span> lint
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">name:</span> Run tests
+        <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <div class="retrieval">
+    <h3>Bug #1</h3>
+    <div class="retrieval-question">Look at the <code>test</code> job. What's wrong with how it declares its dependency on <code>lint</code>?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>It says <code>uses: lint</code>, but <code>uses:</code> is a step-level keyword for loading Actions. The correct keyword is <code>needs: lint</code>. GitHub would either error out or try to interpret <code>lint</code> as an Action reference — neither is what you want.</p>
+    </details>
+
+    <h3>Bug #2</h3>
+    <div class="retrieval-question">Even after fixing Bug #1, the <code>test</code> job would still fail. Why?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>The <code>test</code> job has no <code>actions/checkout</code> step and no Node.js setup. It jumps straight to <code>npm test</code> on a fresh, empty runner — there's no code, no Node.js, and no <code>npm</code>. Remember: each job is isolated and must set up its environment from scratch.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+
+    <div class="retrieval-question">1. What keyword makes one job wait for another to complete?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>needs:</code> — placed at the job level (not inside <code>steps:</code>). Example: <code>needs: lint</code> makes the current job wait for the <code>lint</code> job to succeed.</p>
+    </details>
+
+    <div class="retrieval-question">2. Job A runs <code>npm ci</code> and installs all dependencies. Job B has <code>needs: A</code>. Does job B already have the dependencies installed?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>No. <code>needs:</code> controls <em>ordering</em>, not <em>sharing</em>. Job B gets its own fresh runner and must install everything itself.</p>
+    </details>
+
+    <div class="retrieval-question">3. What's the difference between <code>npm ci</code> and <code>npm install</code> in a CI context?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>npm ci</code> does a clean, deterministic install from the lockfile. It's faster, won't update <code>package-lock.json</code>, and is what you should always use in pipelines. <code>npm install</code> may modify the lockfile.</p>
+    </details>
+
+    <div class="retrieval-question">4. Our workflow triggers on both <code>push</code> and <code>pull_request</code>. Why both?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>push</code> runs CI after code lands on <code>main</code> — catching anything that slipped through. <code>pull_request</code> runs CI <em>before</em> merging — giving you a gate to reject bad code. Together, they form a safety net.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Your Turn</h2>
+
+  <p>The best way to lock this in is to build it. Here's what to do:</p>
+
+  <ol>
+    <li>Create a new GitHub repository (or use an existing one).</li>
+    <li>Add the files shown above: <code>src/math.js</code>, <code>tests/math.test.js</code>, <code>package.json</code>, and <code>.eslintrc.json</code>.</li>
+    <li>Run <code>npm install</code> locally to generate <code>package-lock.json</code> (CI needs this for <code>npm ci</code>).</li>
+    <li>Create <code>.github/workflows/ci.yml</code> with the workflow we wrote.</li>
+    <li>Push to <code>main</code> and open the <strong>Actions</strong> tab in GitHub.</li>
+    <li>Watch both jobs run: lint first, then test.</li>
+  </ol>
+
+  <p>If you get stuck or see something unexpected, ask me — that's what I'm here for. 💬</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 04 complete.</strong> You can now write a two-job CI pipeline with explicit job dependencies using <code>needs:</code>.</p>
+    <p style="margin-top: 0.5rem;">Next up: <strong>Lesson 05 — Matrix Builds and Caching.</strong> We'll test across multiple Node.js versions in parallel and dramatically speed up <code>npm ci</code> with GitHub's built-in cache. Let me know when you're ready!</p>
+    <p style="margin-top: 1rem;"><a href="0003-anatomy-of-a-workflow.html">← Lesson 03: Anatomy of a Workflow</a></p>
+  </div>
+
+</body>
+</html>
