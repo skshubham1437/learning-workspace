@@ -13,7 +13,7 @@
 
 ### Phase 2: GitHub Actions Deep Dive
 3. ✅ Lesson 03: Anatomy of a workflow file — triggers, jobs, steps, runners
-4. Lesson 04: Your first CI pipeline — lint + test a Node.js app
+4. ✅ Lesson 04: Your first CI pipeline — lint + test a Node.js app
 5. Lesson 05: Matrix builds and caching — testing across versions
 6. Lesson 06: Secrets, environment variables, and permissions
 

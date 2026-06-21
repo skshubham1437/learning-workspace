@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 05 — Matrix Builds &amp; Caching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0004-your-first-ci-pipeline.html">← Lesson 04</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 05</div>
+  <h1>Matrix Builds &amp; Caching</h1>
+  <p class="subtitle">Test across multiple Node.js versions in parallel — and make <code>npm ci</code> fast by caching your dependencies.</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/using-a-matrix-for-your-jobs">Running variations of jobs in a workflow</a> and <a href="https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching">Dependency caching</a> — GitHub's official docs on both features.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Problem</h2>
+
+  <p>In Lesson 04, our CI pipeline tested on one version of Node.js: <code>20</code>. That works — but in the real world you often need to answer: <em>does my code work on Node 18, 20, <strong>and</strong> 22?</em></p>
+
+  <p>You <em>could</em> copy-paste the job three times, changing the version each time. But that's fragile and ugly. GitHub Actions has a first-class solution: the <strong>strategy matrix</strong>.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>What a Matrix Does</h2>
+
+  <p>A matrix tells GitHub: "run this same job once for each combination of values I give you." You define <em>variables</em> (like <code>node-version</code>) with a list of values, and Actions automatically creates one job per value — running them <strong>in parallel</strong> by default.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Mental Model</span>
+    <p>Think of a matrix as a <code>for</code> loop over your job. You write the job once, the matrix iterates over it with different parameters. Each iteration is a completely independent job on its own runner.</p>
+  </div>
+
+  <p>Here's the Lesson 04 test job, upgraded with a matrix:</p>
+
+<pre><code><span class="code-variable">test:</span>
+  <span class="code-keyword">needs:</span> lint
+  <span class="code-keyword">runs-on:</span> ubuntu-latest
+
+  <span class="code-keyword">strategy:</span>
+    <span class="code-keyword">matrix:</span>
+      <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>, <span class="code-string">22</span>]
+
+  <span class="code-keyword">steps:</span>
+    - <span class="code-keyword">name:</span> Checkout code
+      <span class="code-keyword">uses:</span> actions/checkout@v4
+
+    - <span class="code-keyword">name:</span> Setup Node.js ${{ matrix.node-version }}
+      <span class="code-keyword">uses:</span> actions/setup-node@v4
+      <span class="code-keyword">with:</span>
+        <span class="code-keyword">node-version:</span> ${{ matrix.node-version }}
+
+    - <span class="code-keyword">name:</span> Install dependencies
+      <span class="code-keyword">run:</span> npm ci
+
+    - <span class="code-keyword">name:</span> Run tests
+      <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <p>That single job definition produces <strong>three parallel jobs</strong>: one with Node 18, one with 20, one with 22. GitHub labels them <code>test (18)</code>, <code>test (20)</code>, <code>test (22)</code> in the Actions UI.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Anatomy of a Matrix</h2>
+
+  <p>Let's unpack the syntax piece by piece:</p>
+
+  <table>
+    <thead>
+      <tr><th>Key</th><th>What It Does</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>strategy:</code></td>
+        <td>A job-level block that configures how the job is run. The matrix lives inside it.</td>
+      </tr>
+      <tr>
+        <td><code>matrix:</code></td>
+        <td>Defines the variables and their values. Each variable becomes accessible via <code>${{ matrix.&lt;name&gt; }}</code>.</td>
+      </tr>
+      <tr>
+        <td><code>node-version: [18, 20, 22]</code></td>
+        <td>A custom variable name with three values. GitHub spins up one job per value.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Analogy</span>
+    <p>Imagine you're a restaurant with three kitchens. Instead of writing three separate recipes (one per kitchen), you write one recipe and say: "Kitchen A uses ingredient X, Kitchen B uses ingredient Y, Kitchen C uses ingredient Z." Same recipe, different inputs, all cooking simultaneously.</p>
+  </div>
+
+  <h3>Accessing matrix values</h3>
+
+  <p>Inside any step, you reference a matrix variable with the <strong>expression syntax</strong>: <code>${{ matrix.node-version }}</code>. GitHub replaces this with the actual value for each job instance.</p>
+
+  <p>This is why the <code>name:</code> field says <code>Setup Node.js ${{ matrix.node-version }}</code> — the logs will show "Setup Node.js 18", "Setup Node.js 20", etc., making it easy to identify which job is which.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Key Concept — Expressions</span>
+    <p>The <code>${{ }}</code> syntax is GitHub Actions' <strong>expression language</strong>. It can access <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs">contexts</a> — objects like <code>matrix</code>, <code>github</code>, <code>env</code>, <code>secrets</code>, and more. For now, just know that <code>matrix.*</code> gives you the current iteration's value. We'll use more contexts in Lesson 06 when we cover secrets.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Multi-Dimensional Matrices</h2>
+
+  <p>You can add more than one variable. Every combination runs:</p>
+
+<pre><code><span class="code-keyword">strategy:</span>
+  <span class="code-keyword">matrix:</span>
+    <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>]
+    <span class="code-variable">os:</span> [<span class="code-string">ubuntu-latest</span>, <span class="code-string">windows-latest</span>]</code></pre>
+
+  <p>This creates <strong>4 jobs</strong> (2 × 2): Node 18 on Ubuntu, Node 18 on Windows, Node 20 on Ubuntu, Node 20 on Windows. You'd then use <code>${{ matrix.os }}</code> in <code>runs-on:</code>.</p>
+
+  <p>For our mission (React, Node, Go apps), we'll mostly use single-dimension matrices to test across runtime versions. Multi-dimensional is nice to know — you'll reach for it when you need cross-platform testing.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Controlling Matrix Behaviour</h2>
+
+  <p>Two important options live under <code>strategy:</code>:</p>
+
+  <h3>fail-fast</h3>
+
+<pre><code><span class="code-keyword">strategy:</span>
+  <span class="code-keyword">fail-fast:</span> <span class="code-keyword">false</span>
+  <span class="code-keyword">matrix:</span>
+    <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>, <span class="code-string">22</span>]</code></pre>
+
+  <p>By default, <code>fail-fast</code> is <code>true</code>: if <em>any</em> matrix job fails, GitHub <strong>cancels all the other running jobs</strong>. This saves minutes — but sometimes you want to see <em>all</em> failures at once (e.g., "does it break on Node 18 <em>and</em> 22, or just 18?"). Setting <code>fail-fast: false</code> lets every job run to completion regardless.</p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">When to use each</span>
+    <p><strong><code>fail-fast: true</code></strong> (default) — fast feedback on PRs. One failure means "fix this first."<br>
+    <strong><code>fail-fast: false</code></strong> — debugging compatibility issues. You need the full picture across all versions.</p>
+  </div>
+
+  <h3>max-parallel</h3>
+
+<pre><code><span class="code-keyword">strategy:</span>
+  <span class="code-keyword">max-parallel:</span> <span class="code-string">2</span>
+  <span class="code-keyword">matrix:</span>
+    <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>, <span class="code-string">22</span>]</code></pre>
+
+  <p>Limits how many matrix jobs run simultaneously. Useful if you're on a <a href="https://docs.github.com/en/actions/concepts/billing-and-usage">GitHub Free plan</a> (20 concurrent jobs) and want to leave room for other workflows. Usually you don't need this.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Speed Problem</h2>
+
+  <p>We now have 3 test jobs (one per Node version) plus the lint job — that's 4 jobs total, each doing <code>npm ci</code> from scratch. On a project with many dependencies, <code>npm ci</code> can take 30–60 seconds. Multiply that by 4 jobs, and you're wasting a lot of time downloading the same packages over and over.</p>
+
+  <p>This is where <strong>dependency caching</strong> comes in.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>How Caching Works</h2>
+
+  <p>GitHub Actions can <strong>save a directory</strong> (like <code>~/.npm</code>, npm's download cache) to its servers after a workflow run. On the next run, if the <strong>cache key</strong> matches, it restores the directory instead of downloading everything again.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Important Distinction</span>
+    <p>Caching saves the <strong>download cache</strong> (<code>~/.npm</code>), not <code>node_modules/</code> itself. <code>npm ci</code> still runs and creates <code>node_modules/</code> from the cache — but it's dramatically faster because it doesn't need to fetch packages from the internet. This is the recommended approach per <a href="https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching">GitHub's caching docs</a>.</p>
+  </div>
+
+  <h3>The cache key</h3>
+
+  <p>A cache key is a string that uniquely identifies what's cached. For npm, the standard pattern is:</p>
+
+<pre><code><span class="code-variable">key:</span> ${{ runner.os }}-node-${{ hashFiles(<span class="code-string">'**/package-lock.json'</span>) }}</code></pre>
+
+  <p>Breaking that down:</p>
+  <ul>
+    <li><code>runner.os</code> — the operating system (e.g., <code>Linux</code>). Different OSes need different caches.</li>
+    <li><code>hashFiles('**/package-lock.json')</code> — a hash of your lockfile. When dependencies change, the lockfile changes, the hash changes, and the cache is invalidated. Perfect.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Easy Way: Built-In Caching</h2>
+
+  <p>Good news: <code>actions/setup-node@v4</code> has <strong>built-in caching support</strong>. You don't need a separate caching step. Just add one line:</p>
+
+<pre><code>- <span class="code-keyword">name:</span> Setup Node.js ${{ matrix.node-version }}
+  <span class="code-keyword">uses:</span> actions/setup-node@v4
+  <span class="code-keyword">with:</span>
+    <span class="code-keyword">node-version:</span> ${{ matrix.node-version }}
+    <span class="code-keyword">cache:</span> <span class="code-string">'npm'</span>              <span class="code-comment"># ← this one line</span></code></pre>
+
+  <p>That's it. Under the hood, <code>actions/setup-node</code> uses <code>actions/cache</code> to save and restore <code>~/.npm</code>, keyed on your <code>package-lock.json</code> hash. First run: no cache, normal speed. Second run: cache hit, <code>npm ci</code> runs in seconds instead of 30–60 seconds.</p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Analogy</span>
+    <p>Imagine a kitchen that orders ingredients from a supplier every time it opens (that's the fresh runner). Caching is like having a pantry that remembers what you ordered last time. If the recipe hasn't changed (lockfile hash matches), the pantry already has everything — you skip the delivery wait.</p>
+  </div>
+
+  <div class="callout callout-success">
+    <span class="callout-label">Important Prerequisite</span>
+    <p>The <code>cache: 'npm'</code> option requires a <code>package-lock.json</code> in your repository. This is why we ran <code>npm install</code> locally in Lesson 04 — it generates the lockfile that both <code>npm ci</code> and the cache mechanism depend on.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Full Workflow</h2>
+
+  <p>Here's our Lesson 04 workflow upgraded with matrix builds and caching:</p>
+
+<pre><code><span class="code-keyword">name:</span> <span class="code-string">"CI"</span>
+
+<span class="code-keyword">on:</span>
+  <span class="code-keyword">push:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+  <span class="code-keyword">pull_request:</span>
+    <span class="code-keyword">branches:</span> [ <span class="code-string">"main"</span> ]
+
+<span class="code-keyword">jobs:</span>
+  <span class="code-variable">lint:</span>
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">name:</span> Checkout code
+        <span class="code-keyword">uses:</span> actions/checkout@v4
+
+      - <span class="code-keyword">name:</span> Setup Node.js
+        <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> <span class="code-string">'20'</span>
+          <span class="code-keyword">cache:</span> <span class="code-string">'npm'</span>             <span class="code-comment"># ← cached!</span>
+
+      - <span class="code-keyword">name:</span> Install dependencies
+        <span class="code-keyword">run:</span> npm ci
+
+      - <span class="code-keyword">name:</span> Run linter
+        <span class="code-keyword">run:</span> npm run lint
+
+  <span class="code-variable">test:</span>
+    <span class="code-keyword">needs:</span> lint
+    <span class="code-keyword">runs-on:</span> ubuntu-latest
+
+    <span class="code-keyword">strategy:</span>                        <span class="code-comment"># ← NEW: matrix strategy</span>
+      <span class="code-keyword">matrix:</span>
+        <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>, <span class="code-string">22</span>]
+
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">name:</span> Checkout code
+        <span class="code-keyword">uses:</span> actions/checkout@v4
+
+      - <span class="code-keyword">name:</span> Setup Node.js ${{ matrix.node-version }}
+        <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> ${{ matrix.node-version }}
+          <span class="code-keyword">cache:</span> <span class="code-string">'npm'</span>             <span class="code-comment"># ← cached!</span>
+
+      - <span class="code-keyword">name:</span> Install dependencies
+        <span class="code-keyword">run:</span> npm ci
+
+      - <span class="code-keyword">name:</span> Run tests
+        <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <p>What changed from Lesson 04:</p>
+  <ol>
+    <li><strong><code>strategy.matrix</code></strong> added to the <code>test</code> job — now runs on Node 18, 20, and 22 in parallel.</li>
+    <li><strong><code>cache: 'npm'</code></strong> added to both <code>actions/setup-node</code> steps — second run onwards will be much faster.</li>
+    <li><strong><code>${{ matrix.node-version }}</code></strong> replaces the hardcoded <code>'20'</code> in the test job's <code>node-version</code> field.</li>
+  </ol>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>How the Jobs Look in the Actions UI</h2>
+
+  <p>When this workflow runs, the <strong>Actions</strong> tab shows a dependency graph like this:</p>
+
+<pre><code>  ┌──────────┐
+  │   lint   │
+  └────┬─────┘
+       │ needs
+  ┌────┴─────────────────────────────┐
+  │                                  │
+┌─┴──────────┐ ┌────────────┐ ┌─────┴──────┐
+│ test (18)  │ │ test (20)  │ │ test (22)  │
+└────────────┘ └────────────┘ └────────────┘</code></pre>
+
+  <p>Lint runs first. Once it passes, all three test jobs launch <em>simultaneously</em>. If any test job fails and <code>fail-fast</code> is <code>true</code> (the default), the others are cancelled. The whole workflow takes roughly as long as lint + the slowest test job — not lint + three sequential tests.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Manual Way: actions/cache</h2>
+
+  <p>The built-in <code>cache: 'npm'</code> on <code>actions/setup-node</code> handles npm automatically. But other ecosystems (Go modules, pip, etc.) don't have this convenience. For those, you use <a href="https://github.com/actions/cache"><code>actions/cache</code></a> directly:</p>
+
+<pre><code>- <span class="code-keyword">name:</span> Cache npm dependencies
+  <span class="code-keyword">uses:</span> actions/cache@v4
+  <span class="code-keyword">with:</span>
+    <span class="code-keyword">path:</span> ~/.npm
+    <span class="code-keyword">key:</span> ${{ runner.os }}-npm-${{ hashFiles(<span class="code-string">'**/package-lock.json'</span>) }}
+    <span class="code-keyword">restore-keys:</span> |
+      ${{ runner.os }}-npm-</code></pre>
+
+  <p>Three parameters:</p>
+  <ul>
+    <li><strong><code>path:</code></strong> — what directory to cache. For npm, it's <code>~/.npm</code>.</li>
+    <li><strong><code>key:</code></strong> — the exact cache key. Cache hit = exact match.</li>
+    <li><strong><code>restore-keys:</code></strong> — fallback prefixes. If the exact key isn't found, GitHub looks for keys starting with these prefixes and restores the closest match. You still get <em>most</em> of the cache benefit even if the lockfile changed slightly.</li>
+  </ul>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">When to use which</span>
+    <p>Use the <strong>built-in <code>cache:</code></strong> option on <code>actions/setup-node</code> (or <code>setup-python</code>, etc.) whenever possible — it's simpler and less error-prone. Use <strong><code>actions/cache</code></strong> directly when you need to cache something the setup action doesn't handle, or when you're working with a language that has no setup action with built-in caching.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Cache Limits</h2>
+
+  <p>A few things to know about GitHub's cache:</p>
+
+  <ul>
+    <li><strong>10 GB total</strong> per repository. Once you hit the limit, the oldest caches are evicted. (<a href="https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching">Source</a>)</li>
+    <li><strong>Caches expire after 7 days</strong> of not being accessed.</li>
+    <li>Caches are <strong>scoped by branch</strong>. A cache created on a feature branch can fall back to the <code>main</code> branch cache, but not vice versa.</li>
+    <li>Cache <strong>does not persist across workflow re-runs</strong> if the key changed.</li>
+  </ul>
+
+  <p>For most projects, these limits are generous. You won't hit them unless you're caching very large directories (like Docker layer caches — we'll get to those later).</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+
+    <div class="retrieval-question">1. What keyword do you add to a job to run it once per value in a list?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p><code>strategy.matrix</code> — you define a variable (like <code>node-version</code>) with a list of values under <code>strategy: matrix:</code> in the job. Each value creates a separate, parallel job instance.</p>
+    </details>
+
+    <div class="retrieval-question">2. A matrix has <code>node-version: [18, 20]</code> and <code>os: [ubuntu-latest, windows-latest]</code>. How many jobs are created?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>4 jobs — one for every combination: (18, ubuntu), (18, windows), (20, ubuntu), (20, windows). The matrix computes the cross-product of all variable values.</p>
+    </details>
+
+    <div class="retrieval-question">3. What does <code>fail-fast: false</code> do, and when would you use it?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>By default (<code>fail-fast: true</code>), if any matrix job fails, all other running matrix jobs are cancelled. Setting <code>fail-fast: false</code> lets every job finish, so you can see the full picture of which versions pass and which fail. Useful when debugging cross-version compatibility.</p>
+    </details>
+
+    <div class="retrieval-question">4. What does <code>cache: 'npm'</code> on <code>actions/setup-node</code> actually cache — <code>node_modules/</code> or something else?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>It caches <code>~/.npm</code> — npm's <em>download cache</em>, not <code>node_modules/</code>. <code>npm ci</code> still creates <code>node_modules/</code>, but it reads packages from the local cache instead of downloading them from the internet, which is much faster.</p>
+    </details>
+
+    <div class="retrieval-question">5. What determines whether a cache is "hit" or "miss"?</div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>The <strong>cache key</strong>. For npm, it's typically based on the OS and a hash of <code>package-lock.json</code>. If the key matches a previously saved cache, it's a hit. If the lockfile changed (new dependencies), the hash changes, the key doesn't match, and it's a miss — though <code>restore-keys</code> can provide a partial match.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>🔍 Spot the Bug</h2>
+
+  <p>This workflow has <strong>one bug</strong>. Try to find it.</p>
+
+<pre><code><span class="code-keyword">jobs:</span>
+  <span class="code-variable">test:</span>
+    <span class="code-keyword">runs-on:</span> ${{ matrix.os }}
+    <span class="code-keyword">strategy:</span>
+      <span class="code-keyword">matrix:</span>
+        <span class="code-variable">os:</span> [<span class="code-string">ubuntu-latest</span>, <span class="code-string">windows-latest</span>]
+        <span class="code-variable">node-version:</span> [<span class="code-string">18</span>, <span class="code-string">20</span>]
+    <span class="code-keyword">steps:</span>
+      - <span class="code-keyword">uses:</span> actions/checkout@v4
+      - <span class="code-keyword">uses:</span> actions/setup-node@v4
+        <span class="code-keyword">with:</span>
+          <span class="code-keyword">node-version:</span> <span class="code-string">'20'</span>
+          <span class="code-keyword">cache:</span> <span class="code-string">'npm'</span>
+      - <span class="code-keyword">run:</span> npm ci
+      - <span class="code-keyword">run:</span> npm test</code></pre>
+
+  <div class="retrieval">
+    <h3>Answer</h3>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>The <code>node-version</code> in <code>setup-node</code> is <strong>hardcoded to <code>'20'</code></strong> instead of using <code>${{ matrix.node-version }}</code>. The matrix defines <code>node-version: [18, 20]</code>, but the step ignores it. All 4 jobs will test on Node 20 — the Node 18 dimension is wasted. The fix: change <code>node-version: '20'</code> to <code>node-version: ${{ matrix.node-version }}</code>.</p>
+    </details>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Your Turn</h2>
+
+  <p>Take the workflow from Lesson 04 (or the full workflow shown above) and upgrade it:</p>
+
+  <ol>
+    <li>Add a <code>strategy.matrix</code> to the <code>test</code> job with at least two Node.js versions.</li>
+    <li>Add <code>cache: 'npm'</code> to both <code>actions/setup-node</code> steps (lint and test).</li>
+    <li>Push to your repo and watch the Actions tab — you should see the lint job followed by multiple test jobs running in parallel.</li>
+    <li><strong>Bonus:</strong> Push again (without changing <code>package-lock.json</code>) and compare the <code>npm ci</code> step duration between the first and second runs. The difference is the cache in action.</li>
+  </ol>
+
+  <p>If something doesn't work or you're curious about anything, ask me. 💬</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><strong>Lesson 05 complete.</strong> You can now run the same job across multiple versions in parallel using <code>strategy.matrix</code>, and speed up dependency installation with built-in caching.</p>
+    <p style="margin-top: 0.5rem;">Next up: <strong>Lesson 06 — Secrets, Environment Variables, and Permissions.</strong> We'll learn how to safely pass API keys and tokens into your workflows without hardcoding them. Let me know when you're ready!</p>
+    <p style="margin-top: 1rem;"><a href="0004-your-first-ci-pipeline.html">← Lesson 04: Your First CI Pipeline</a></p>
+  </div>
+
+</body>
+</html>

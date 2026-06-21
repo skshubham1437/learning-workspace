@@ -52,3 +52,16 @@ _Avoid_: Confusing with "job" — steps within a job share the same runner; jobs
 
 **Trigger (Event)**:
 The condition declared under `on:` that causes a workflow to run. Examples: `push`, `pull_request`, `schedule`, `workflow_dispatch`.
+
+**Matrix (Strategy Matrix)**:
+A job-level configuration under `strategy: matrix:` that runs the same job once per value (or combination of values) in a list. Each matrix instance is an independent job on its own runner.
+_Avoid_: "loop" — it's parallel by default, not sequential
+
+**Expression**:
+The `${{ }}` syntax used to access contexts (like `matrix`, `github`, `env`, `secrets`) at runtime. GitHub Actions evaluates these before running the step.
+
+**Cache Key**:
+A string that uniquely identifies a cached directory. Typically built from the runner OS and a hash of a lockfile (e.g., `package-lock.json`). When the key matches, the cache is restored; when it doesn't, a fresh download occurs.
+
+**fail-fast**:
+A `strategy:` option (default: `true`) that cancels all other matrix jobs when one fails. Set to `false` to let all matrix jobs run to completion.

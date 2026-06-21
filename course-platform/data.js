@@ -27,6 +27,14 @@ const courseData = [
             {
                 "title": "Lesson 03 — Anatomy of a GitHub Actions Workflow",
                 "path": "../github-actions-docker/lessons/0003-anatomy-of-a-workflow.html"
+            },
+            {
+                "title": "Lesson 04 — Your First CI Pipeline",
+                "path": "../github-actions-docker/lessons/0004-your-first-ci-pipeline.html"
+            },
+            {
+                "title": "Lesson 05 — Matrix Builds & Caching",
+                "path": "../github-actions-docker/lessons/0005-matrix-builds-and-caching.html"
             }
         ]
     },
