@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 08 — Writing your first Dockerfile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0007-essential-docker-cli.html">← Lesson 07</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 08</div>
+  <h1>Writing your first Dockerfile</h1>
+  <p class="subtitle">Turning your application into an immutable container image.</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.docker.com/reference/dockerfile/">Dockerfile Reference</a></p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>What is a Dockerfile?</h2>
+
+  <p>If a container is a running environment, an <strong>image</strong> is the blueprint for that environment. A <code>Dockerfile</code> is just a text file containing the instructions to build that blueprint.</p>
+  
+  <p>Images are built in <strong>layers</strong>. Every command in a Dockerfile creates a new layer on top of the previous one. Docker aggressively caches these layers to make builds faster.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The 4 Essential Instructions</h2>
+
+  <p>You can build 90% of the world's applications using just these four Dockerfile instructions:</p>
+
+  <h3>1. FROM</h3>
+  <p>Every Dockerfile MUST start with a <code>FROM</code> instruction. It defines your base image (the starting point).</p>
+<pre><code><span class="code-keyword">FROM</span> node:20-alpine</code></pre>
+
+  <h3>2. COPY</h3>
+  <p>Copies files from your host machine (your Mac) into the image.</p>
+<pre><code><span class="code-comment"># Format: COPY [host-path] [container-path]</span>
+<span class="code-keyword">COPY</span> package.json /app/
+<span class="code-keyword">COPY</span> . /app/</code></pre>
+
+  <h3>3. RUN</h3>
+  <p>Executes a command <strong>DURING THE BUILD PROCESS</strong>. This is typically used to install dependencies or compile code. The result is saved into the image.</p>
+<pre><code><span class="code-keyword">RUN</span> npm install</code></pre>
+
+  <h3>4. CMD</h3>
+  <p>Defines the default command to execute <strong>WHEN THE CONTAINER STARTS</strong>. There can only be one <code>CMD</code> instruction in a Dockerfile.</p>
+<pre><code><span class="code-keyword">CMD</span> ["npm", "start"]</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Putting It Together</h2>
+
+  <p>Here is what a complete, basic Dockerfile for a Node.js app looks like:</p>
+
+<pre><code><span class="code-comment"># 1. Start with a lightweight Node.js environment</span>
+<span class="code-keyword">FROM</span> node:20-alpine
+
+<span class="code-comment"># 2. Set the working directory inside the container</span>
+<span class="code-keyword">WORKDIR</span> /app
+
+<span class="code-comment"># 3. Copy package.json first (for caching optimization)</span>
+<span class="code-keyword">COPY</span> package.json .
+
+<span class="code-comment"># 4. Install dependencies (runs during 'docker build')</span>
+<span class="code-keyword">RUN</span> npm install
+
+<span class="code-comment"># 5. Copy the rest of the source code</span>
+<span class="code-keyword">COPY</span> . .
+
+<span class="code-comment"># 6. Expose the port the app runs on (mostly for documentation)</span>
+<span class="code-keyword">EXPOSE</span> 3000
+
+<span class="code-comment"># 7. Start the app (runs during 'docker run')</span>
+<span class="code-keyword">CMD</span> ["npm", "start"]</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Building the Image</h2>
+
+  <p>Once you write a Dockerfile, you build it using the <code>docker build</code> command.</p>
+
+<pre><code><span class="code-comment"># -t tags the image with a name (my_node_app)</span>
+<span class="code-comment"># The . at the end tells Docker to look for the Dockerfile in the current directory</span>
+docker build -t my_node_app .</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Your Turn</h2>
+
+  <p>Let's build a tiny Python web server from scratch!</p>
+
+  <ol>
+    <li>On your computer, create a new folder: <code>mkdir docker-test && cd docker-test</code></li>
+    <li>Create a file named <code>index.html</code> with the text <code>&lt;h1&gt;Hello from my custom image!&lt;/h1&gt;</code>.</li>
+    <li>Create a file named <code>Dockerfile</code> (no extension).</li>
+    <li>Inside the Dockerfile, write these three lines:
+      <pre><code>FROM python:3.9-alpine
+WORKDIR /app
+COPY index.html .
+CMD ["python", "-m", "http.server", "8000"]</code></pre>
+    </li>
+    <li>Build your image: <code>docker build -t my_python_server .</code></li>
+    <li>Run your brand new custom image: <code>docker run -d -p 8080:8000 my_python_server</code></li>
+    <li>Visit <code>http://localhost:8080</code> in your browser!</li>
+  </ol>
+
+  <p>Let me know when you've successfully built and run your first custom Docker image!</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p style="margin-top: 1rem;"><a href="0007-essential-docker-cli.html">← Lesson 07: Essential Docker CLI</a></p>
+  </div>
+
+</body>
+</html>

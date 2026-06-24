@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 09 — Docker Volumes &amp; Persistent Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0008-writing-your-first-dockerfile.html">← Lesson 08</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 09</div>
+  <h1>Docker Volumes &amp; Persistent Data</h1>
+  <p class="subtitle">Because losing your production database when a container restarts is generally considered "bad practice".</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.docker.com/storage/volumes/">Docker Storage: Volumes</a></p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Problem: Ephemeral Containers</h2>
+
+  <p>By default, containers are <strong>ephemeral</strong>. Any data created inside the container is written to a temporary read/write layer. When the container stops or is deleted, that data is <strong>destroyed forever</strong>.</p>
+  
+  <p>If you run a MySQL database in a container, it will work perfectly—until the container restarts, at which point your entire database vanishes. To solve this, we use <strong>Volumes</strong>.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Volumes vs Bind Mounts</h2>
+
+  <p>There are two primary ways to persist data or share it between the host and the container. They both use the <code>-v</code> or <code>--mount</code> flag.</p>
+
+  <h3>1. Named Volumes (Best for Databases)</h3>
+  <p>A Named Volume is a folder managed entirely by Docker. You give it a name, and Docker stores it somewhere deep in its own managed file system (like <code>/var/lib/docker/volumes/</code> on Linux). You don't care exactly where it is; you just trust Docker to keep it safe across container restarts.</p>
+
+<pre><code><span class="code-comment"># Create a named volume (optional, docker run will create it automatically if it doesn't exist)</span>
+docker volume create my_db_data
+
+<span class="code-comment"># Mount the named volume to where MySQL stores its data internally</span>
+docker run -d \
+  --name my_postgres \
+  -e POSTGRES_PASSWORD=secret \
+  <span class="code-keyword">-v my_db_data:/var/lib/postgresql/data</span> \
+  postgres:15</code></pre>
+
+  <h3>2. Bind Mounts (Best for Local Development)</h3>
+  <p>A Bind Mount maps a <strong>specific folder on your host machine</strong> (e.g., your project folder) directly into the container. This is crucial for local development because if you edit your source code on your Mac, the changes instantly appear inside the container without rebuilding the image.</p>
+
+<pre><code><span class="code-comment"># Mount the current directory (pwd) into the container's /app directory</span>
+docker run -d \
+  --name dev_server \
+  -p 3000:3000 \
+  <span class="code-keyword">-v $(pwd):/app</span> \
+  node:20-alpine npm run dev</code></pre>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Kubernetes Connection</span>
+    <p>In Kubernetes, this concept translates to <strong>PersistentVolumes (PV)</strong> and <strong>PersistentVolumeClaims (PVC)</strong>. Kubernetes pods are completely ephemeral. To save state in K8s, your Pod has to "claim" a PersistentVolume to mount inside it. Understanding Docker volumes now makes K8s PVCs much easier to grasp later!</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Cleaning Up Volumes</h2>
+
+  <p>Because volumes persist even when containers are deleted, they can eventually consume a lot of disk space if left unchecked.</p>
+
+<pre><code><span class="code-comment"># List all volumes</span>
+docker volume ls
+
+<span class="code-comment"># Delete a specific volume</span>
+docker volume rm my_db_data
+
+<span class="code-comment"># CAUTION: Delete ALL volumes not currently attached to a container</span>
+docker volume prune</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Your Turn</h2>
+
+  <p>Try spinning up an ephemeral container, killing it, and proving the data is gone. Then do it again with a volume!</p>
+
+  <ol>
+    <li>Start an Alpine Linux container in interactive mode: <br><code>docker run -it --name test_ephemeral alpine sh</code></li>
+    <li>Inside the container, create a file: <code>echo "hello" > /data.txt</code>. Then type <code>exit</code>.</li>
+    <li>The container stopped. Start it again and connect: <br><code>docker start -i test_ephemeral</code>. Check the file: <code>cat /data.txt</code>. (It's still there because the container was just stopped, not deleted).</li>
+    <li>Type <code>exit</code>. Now <strong>delete</strong> the container: <code>docker rm test_ephemeral</code>. The data is now gone forever.</li>
+    <li><strong>The Volume test:</strong> Run a new container, but attach a named volume: <br><code>docker run -it --name test_volume -v my_first_volume:/my_data alpine sh</code></li>
+    <li>Inside the container, write to the volume folder: <br><code>echo "Persistent Hello!" > /my_data/hello.txt</code>. Then <code>exit</code>.</li>
+    <li>Delete the container: <code>docker rm test_volume</code>.</li>
+    <li>Create a completely <strong>new</strong> container, but attach that <em>same</em> volume: <br><code>docker run -it --rm -v my_first_volume:/my_data alpine cat /my_data/hello.txt</code>. You should see your text!</li>
+  </ol>
+
+  <p>Let me know when you've verified the data survived the container deletion!</p>
+
+  <div class="lesson-footer">
+    <p style="margin-top: 1rem;"><a href="0008-writing-your-first-dockerfile.html">← Lesson 08: Writing your first Dockerfile</a></p>
+    <p style="margin-top: 1rem; text-align: right;"><a href="0010-docker-networks-container-communication.html">Lesson 10: Docker Networks & Container Communication →</a></p>
+  </div>
+
+</body>
+</html>

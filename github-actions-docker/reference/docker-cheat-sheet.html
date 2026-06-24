@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker CLI Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <style>
+    body { max-width: 900px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0 2rem; }
+    th { text-align: left; padding: 0.5rem 0.75rem; background: #f8f9fa; border-bottom: 2px solid #e2e8f0; font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    td:first-child { font-family: var(--mono); font-size: 0.8rem; color: #2563eb; white-space: nowrap; }
+    td:last-child { color: #475569; }
+    tr:last-child td { border-bottom: none; }
+    h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 2rem 0 0.5rem; font-family: var(--sans); font-weight: 600; }
+    .section-label { font-size: 0.7rem; font-family: var(--mono); color: #94a3b8; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <div class="lesson-number">Reference</div>
+  <h1>Docker Cheat Sheet</h1>
+  <p class="subtitle">Core CLI commands, Dockerfile instructions, and mental models in one place.</p>
+
+  <h2>Containers</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td>docker run -d -p 8080:80 --name web nginx</td><td>Pull + create + start a container. -d = detached, -p = publish port host:container</td></tr>
+    <tr><td>docker ps</td><td>List running containers</td></tr>
+    <tr><td>docker ps -a</td><td>List all containers including stopped ones</td></tr>
+    <tr><td>docker stop [name]</td><td>Gracefully stop a container (SIGTERM → SIGKILL after 10s)</td></tr>
+    <tr><td>docker rm [name]</td><td>Delete a stopped container</td></tr>
+    <tr><td>docker rm -f [name]</td><td>Force-stop and delete a running container</td></tr>
+    <tr><td>docker logs -f [name]</td><td>Stream live stdout/stderr from a container</td></tr>
+    <tr><td>docker exec -it [name] sh</td><td>"SSH" into a running container. Use bash if sh isn't available.</td></tr>
+    <tr><td>docker inspect [name]</td><td>Full JSON metadata: IP, mounts, env vars, network config</td></tr>
+  </table>
+
+  <h2>Images</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td>docker build -t my_app:v1 .</td><td>Build image from Dockerfile in current dir. -t = tag (name:version)</td></tr>
+    <tr><td>docker images</td><td>List all local images with size and tag</td></tr>
+    <tr><td>docker pull postgres:15</td><td>Download an image without running it</td></tr>
+    <tr><td>docker rmi [name]</td><td>Delete a local image</td></tr>
+    <tr><td>docker image prune</td><td>Delete all dangling (untagged) images</td></tr>
+    <tr><td>docker history [name]</td><td>Show layer-by-layer breakdown of an image and its sizes</td></tr>
+  </table>
+
+  <h2>Volumes</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td>docker volume create my_data</td><td>Create a named volume (Docker manages its location)</td></tr>
+    <tr><td>docker volume ls</td><td>List all volumes</td></tr>
+    <tr><td>docker volume rm my_data</td><td>Delete a volume (only works if no container is using it)</td></tr>
+    <tr><td>docker volume prune</td><td>Delete all volumes not attached to any container. Irreversible.</td></tr>
+    <tr><td>-v my_data:/var/lib/postgresql/data</td><td>Mount named volume to container path</td></tr>
+    <tr><td>-v $(pwd):/app</td><td>Bind mount current directory into container (for dev hot-reload)</td></tr>
+  </table>
+
+  <h2>Networks</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td>docker network create my_net</td><td>Create a user-defined bridge network</td></tr>
+    <tr><td>docker network ls</td><td>List all networks</td></tr>
+    <tr><td>docker network inspect my_net</td><td>See which containers are connected and their internal IPs</td></tr>
+    <tr><td>--network my_net</td><td>Connect a container to a network at run time</td></tr>
+    <tr><td>docker network connect my_net [container]</td><td>Connect an already-running container to a network</td></tr>
+  </table>
+
+  <h2>Dockerfile Instructions</h2>
+  <table>
+    <tr><th>Instruction</th><th>When it runs</th><th>What it does</th></tr>
+    <tr><td>FROM node:20-alpine</td><td>Build</td><td>Base image — the starting layer. Always first.</td></tr>
+    <tr><td>WORKDIR /app</td><td>Build</td><td>Sets the working directory for all subsequent instructions</td></tr>
+    <tr><td>COPY package.json .</td><td>Build</td><td>Copies files from host into the image layer</td></tr>
+    <tr><td>RUN npm install</td><td>Build</td><td>Executes a command and saves the result as a new layer</td></tr>
+    <tr><td>ENV NODE_ENV=production</td><td>Build + Runtime</td><td>Sets an environment variable available at build and run time</td></tr>
+    <tr><td>EXPOSE 3000</td><td>Documentation only</td><td>Documents which port the app listens on. Does not publish it.</td></tr>
+    <tr><td>CMD ["npm", "start"]</td><td>Runtime</td><td>Default command when container starts. Can be overridden at runtime.</td></tr>
+    <tr><td>ENTRYPOINT ["node"]</td><td>Runtime</td><td>Fixed command. CMD becomes its arguments. Harder to override.</td></tr>
+  </table>
+
+  <h2>Mental Models</h2>
+  <table>
+    <tr><th>Concept</th><th>Analogy</th></tr>
+    <tr><td>Image</td><td>A class definition (blueprint). Immutable. Can be instantiated many times.</td></tr>
+    <tr><td>Container</td><td>A running instance of a class. Ephemeral. Disposable.</td></tr>
+    <tr><td>Named Volume</td><td>An external hard drive Docker manages for you. Outlives the container.</td></tr>
+    <tr><td>Bind Mount</td><td>A shared folder between your host and the container.</td></tr>
+    <tr><td>Network</td><td>A private LAN where containers can find each other by name (DNS).</td></tr>
+    <tr><td>EXPOSE</td><td>A sticky note on a box saying "port 80 is inside here". Doesn't open anything.</td></tr>
+    <tr><td>-p 8080:80</td><td>The actual delivery — punches a hole from your host 8080 to the box's 80.</td></tr>
+  </table>
+
+</body>
+</html>

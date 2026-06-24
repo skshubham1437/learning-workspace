@@ -33,8 +33,28 @@ const courseData = [
                 "path": "../github-actions-docker/lessons/0004-your-first-ci-pipeline.html"
             },
             {
-                "title": "Lesson 05 — Matrix Builds & Caching",
+                "title": "Lesson 05 — Matrix Builds &amp; Caching",
                 "path": "../github-actions-docker/lessons/0005-matrix-builds-and-caching.html"
+            },
+            {
+                "title": "Lesson 06 — Secrets, Environment Variables & Permissions",
+                "path": "../github-actions-docker/lessons/0006-secrets-env-permissions.html"
+            },
+            {
+                "title": "Lesson 07 — Essential Docker CLI",
+                "path": "../github-actions-docker/lessons/0007-essential-docker-cli.html"
+            },
+            {
+                "title": "Lesson 08 — Writing your first Dockerfile",
+                "path": "../github-actions-docker/lessons/0008-writing-your-first-dockerfile.html"
+            },
+            {
+                "title": "Lesson 09 — Docker Volumes & Persistent Data",
+                "path": "../github-actions-docker/lessons/0009-docker-volumes-persistent-data.html"
+            },
+            {
+                "title": "Lesson 10 — Docker Networks & Container Communication",
+                "path": "../github-actions-docker/lessons/0010-docker-networks-container-communication.html"
             }
         ]
     },
@@ -45,6 +65,16 @@ const courseData = [
             {
                 "title": "Module 01, Lesson 1 — What Microservices Actually Are",
                 "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/lessons/0001-what-microservices-actually-are.html"
+            }
+        ]
+    },
+    {
+        "title": "Playground",
+        "folder": "playground",
+        "lessons": [
+            {
+                "title": "index",
+                "path": "../playground/index.html"
             }
         ]
     }

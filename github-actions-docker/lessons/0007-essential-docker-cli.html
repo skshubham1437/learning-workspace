@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 07 — Essential Docker CLI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0006-secrets-env-permissions.html">← Lesson 06</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 07</div>
+  <h1>Essential Docker CLI</h1>
+  <p class="subtitle">Mastering the terminal commands you need to control containers every single day.</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.docker.com/engine/reference/commandline/cli/">Docker CLI Reference</a></p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Docker Run Command</h2>
+
+  <p>The most important command in Docker is <code>docker run</code>. It downloads an image (if you don't have it locally), creates a container, and starts it.</p>
+
+<pre><code><span class="code-comment"># The basic anatomy</span>
+docker run [OPTIONS] IMAGE_NAME [COMMAND]</code></pre>
+
+  <h3>Crucial Flags</h3>
+  <ul>
+    <li><code>-d</code> (Detached): Runs the container in the background, freeing up your terminal.</li>
+    <li><code>-p 8080:80</code> (Port mapping): Forwards traffic from your host's port 8080 to the container's port 80.</li>
+    <li><code>--name my_web</code>: Gives your container a readable name instead of a random string like <code>angry_einstein</code>.</li>
+    <li><code>-e MYSQL_ROOT_PASSWORD=secret</code> (Environment variable): Injects environment variables directly into the container.</li>
+    <li><code>-it</code> (Interactive TTY): Usually paired with a shell command (like <code>sh</code> or <code>bash</code>) to give you an interactive terminal inside the container.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Managing Containers</h2>
+
+  <p>Once a container is running (or stopped), you need to manage it.</p>
+
+<pre><code><span class="code-comment"># 1. List RUNNING containers</span>
+docker ps
+
+<span class="code-comment"># 2. List ALL containers (including stopped ones)</span>
+docker ps -a
+
+<span class="code-comment"># 3. Stop a running container gracefully</span>
+docker stop [CONTAINER_NAME_OR_ID]
+
+<span class="code-comment"># 4. Remove a stopped container (frees up disk space)</span>
+docker rm [CONTAINER_NAME_OR_ID]
+
+<span class="code-comment"># 5. Remove a RUNNING container by force (stop + rm)</span>
+docker rm -f [CONTAINER_NAME_OR_ID]</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Debugging Containers</h2>
+
+  <p>When things go wrong (and they will), these are your two best friends:</p>
+
+<pre><code><span class="code-comment"># View the standard output (console logs) of a container</span>
+docker logs my_web
+
+<span class="code-comment"># Stream the logs live (like tail -f)</span>
+docker logs -f my_web
+
+<span class="code-comment"># Execute a command INSIDE an already running container</span>
+<span class="code-comment"># (This is how you "SSH" into a running container)</span>
+docker exec -it my_web sh</code></pre>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Your Turn</h2>
+
+  <p>Let's spin up a completely isolated Nginx web server on your machine in 10 seconds.</p>
+
+  <ol>
+    <li>Run this command: <code>docker run -d -p 8080:80 --name my_first_server nginx:alpine</code></li>
+    <li>Open your browser and go to <code>http://localhost:8080</code>. You should see "Welcome to nginx!".</li>
+    <li>Check that it's running: <code>docker ps</code></li>
+    <li>Check its logs: <code>docker logs my_first_server</code></li>
+    <li>"SSH" into it: <code>docker exec -it my_first_server sh</code></li>
+    <li>While inside, look around (<code>ls /usr/share/nginx/html</code>), then type <code>exit</code>.</li>
+    <li>Stop and delete the server: <code>docker rm -f my_first_server</code></li>
+  </ol>
+
+  <p>Run through that flow, and let me know when you've completed it!</p>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p style="margin-top: 1rem;"><a href="0006-secrets-env-permissions.html">← Lesson 06: Secrets, Environment Variables &amp; Permissions</a></p>
+  </div>
+
+</body>
+</html>
