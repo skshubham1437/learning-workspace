@@ -33,7 +33,7 @@ const courseData = [
                 "path": "../github-actions-docker/lessons/0004-your-first-ci-pipeline.html"
             },
             {
-                "title": "Lesson 05 — Matrix Builds & Caching",
+                "title": "Lesson 05 — Matrix Builds &amp; Caching",
                 "path": "../github-actions-docker/lessons/0005-matrix-builds-and-caching.html"
             }
         ]
@@ -44,7 +44,11 @@ const courseData = [
         "lessons": [
             {
                 "title": "Module 01, Lesson 1 — What Microservices Actually Are",
-                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/lessons/0001-what-microservices-actually-are.html"
+                "path": "../microservices-nodejs/lessons/0001-what-microservices-actually-are.html"
+            },
+            {
+                "title": "Glossary — Microservices &amp; Distributed Systems",
+                "path": "../microservices-nodejs/reference/glossary.html"
             }
         ]
     }

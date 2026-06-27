@@ -37,10 +37,11 @@
 
 ## Progress Tracking
 
-- Current Module: 01 — Foundations (not yet started)
-- Exercises Pending: None
+- Current Module: 01 — Foundations (Lesson 1 complete)
+- Exercises Pending: "Map your monolith's coupling surface" (Lesson 1 exercise)
 - Confidence Ratings: (none yet)
 
 ## Session Log
 
 - Session 1 (2026-06-18): Course setup, workspace initialized, diagnostic assessment completed. User's actual knowledge depth calibrated — significantly different from initial prompt claims. Ready to begin Module 01.
+- Session 2 (2026-06-27): Workspace structural overhaul. Created `./assets/lesson.css` (shared stylesheet), `./reference/glossary.html`, flat `./lessons/` directory. Regenerated Lesson 1 with citations, primary source, glossary cross-links, and "ask teacher" reminder. Removed nested phase/module/lessons directory structure.

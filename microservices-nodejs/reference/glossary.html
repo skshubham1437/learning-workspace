@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glossary — Microservices &amp; Distributed Systems</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/lesson.css" />
+  <style>
+    /* ── Glossary-specific overrides ───────── */
+    .term {
+      margin-top: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .term:last-child { border-bottom: none; }
+
+    .term-name {
+      font-family: var(--sans);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 0.25rem;
+    }
+
+    .term-name code {
+      font-size: 0.85em;
+    }
+
+    .term-def {
+      margin-bottom: 0.5rem;
+    }
+
+    .term-avoid {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .term-lesson {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-top: 0.25rem;
+    }
+
+    .section-heading {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-top: 3rem;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Glossary</h1>
+  <p class="subtitle">
+    Canonical terminology for Microservices &amp; Distributed Systems.
+    Terms are added after the learner has encountered them in a lesson.
+  </p>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Architecture Styles</div>
+
+  <div class="term" id="monolith">
+    <div class="term-name">Monolith</div>
+    <p class="term-def">
+      A single deployment unit containing all application functionality. One process, one codebase, one release cycle.
+      All function calls are in-process — they cannot fail due to network issues.
+    </p>
+    <p class="term-avoid">Avoid: using "monolith" as a pejorative. A well-structured monolith is a legitimate architectural choice.</p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="modular-monolith">
+    <div class="term-name">Modular Monolith</div>
+    <p class="term-def">
+      A monolith with enforced internal module boundaries (separate packages, well-defined APIs between modules, no cross-module database access).
+      Gives most code-organisation benefits of microservices with almost none of the operational complexity.
+      Still a single deployment unit.
+    </p>
+    <p class="term-avoid">Avoid: conflating with microservices — the key difference is that all calls remain in-process.</p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="microservice">
+    <div class="term-name">Microservice</div>
+    <p class="term-def">
+      An independently deployable service that runs in its own process, owns its own data, and communicates with other services over the network.
+      The defining property is <strong>independent deployability</strong> — not size, not "single responsibility."
+    </p>
+    <p class="term-avoid">Avoid: defining by size ("small service"). The boundary condition is deployability, not lines of code.</p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="distributed-monolith">
+    <div class="term-name">Distributed Monolith</div>
+    <p class="term-def">
+      A microservices deployment where services are still tightly coupled — through a shared database, deep synchronous call chains, or coordinated releases.
+      Worse than an actual monolith: you get all the operational complexity of distributed systems without any of the autonomy benefits.
+    </p>
+    <p class="term-avoid">Avoid: "loosely coupled microservices" when describing systems with shared databases.</p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Design Principles</div>
+
+  <div class="term" id="independent-deployability">
+    <div class="term-name">Independent Deployability</div>
+    <p class="term-def">
+      The ability to deploy a service without requiring any other service to be redeployed simultaneously.
+      This is the true test of a microservice — the architectural boundary condition from which all other properties flow.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="conways-law">
+    <div class="term-name">Conway's Law</div>
+    <p class="term-def">
+      "Any organisation that designs a system will produce a design whose structure is a copy of the organisation's communication structure." — Melvin Conway, 1968.
+      In practice: your team structure becomes your system architecture, whether you plan it or not.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="inverse-conway-maneuver">
+    <div class="term-name">Inverse Conway Maneuver</div>
+    <p class="term-def">
+      Deliberately restructuring the organisation first to match the desired system architecture, then letting the architecture emerge naturally.
+      Example: Amazon's two-pizza team mandate restructured the org before building service APIs.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="microservice-premium">
+    <div class="term-name">Microservice Premium</div>
+    <p class="term-def">
+      The upfront cost you pay with microservices: distributed systems complexity, network latency, operational overhead, debugging difficulty.
+      You only come out ahead when the productivity benefits of team independence outweigh this cost.
+      Most teams never reach the scale where this crossover happens. — Martin Fowler
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Organisational Patterns</div>
+
+  <div class="term" id="doma">
+    <div class="term-name">DOMA (Domain-Oriented Microservice Architecture)</div>
+    <p class="term-def">
+      Uber's approach to managing thousands of microservices: grouping services into domains with clear ownership,
+      reducing the blast radius of any single change. Addresses the "too many services" problem by adding
+      an organisational layer above individual services.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+  <div class="term" id="two-pizza-team">
+    <div class="term-name">Two-Pizza Team</div>
+    <p class="term-def">
+      Amazon's rule of thumb: a team should be small enough to be fed by two pizzas (~6–8 people).
+      Part of the Inverse Conway Maneuver — small autonomous teams naturally produce small autonomous services.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Terms to be added</div>
+
+  <p style="font-family: var(--sans); font-size: 0.9rem; color: var(--muted);">
+    The following terms will be defined as they are introduced in future lessons:
+  </p>
+  <ul style="font-family: var(--sans); font-size: 0.88rem; color: var(--muted);">
+    <li>Bounded Context (Module 01, Lesson 2)</li>
+    <li>Domain-Driven Design (Module 01, Lesson 2)</li>
+    <li>Ubiquitous Language (Module 01, Lesson 2)</li>
+    <li>Service Boundary (Module 02)</li>
+    <li>Database-per-Service (Module 04)</li>
+    <li>Saga Pattern (Module 05)</li>
+    <li>Circuit Breaker (Module 07)</li>
+    <li>API Gateway (Module 06)</li>
+    <li>Event Sourcing (Module 04)</li>
+    <li>CQRS (Module 04)</li>
+    <li>Eventual Consistency (Module 05)</li>
+    <li>Strangler Fig Pattern (Module 13)</li>
+  </ul>
+
+
+  <!-- Footer -->
+  <div class="lesson-footer" style="margin-top: 3rem;">
+    <p>
+      This glossary is a living document. Terms are added as they are introduced in lessons.
+      Every lesson should use these exact definitions — consistency is the point.
+    </p>
+  </div>
+
+</body>
+</html>
