@@ -10,6 +10,7 @@ To become a well-rounded developer who can confidently ship code — not just wr
 - Can write a multi-stage Dockerfile for each of the three stacks (React, Node/Express, Go)
 - Can wire Docker builds into a GitHub Actions pipeline that pushes images to a container registry
 - Understands the *why* behind each piece — not just copy-pasting YAML
+- Understands Docker Volumes, Networks, and Compose well enough to be ready for Kubernetes primitives (PV/PVC, Services, Pods)
 
 ## Constraints
 
@@ -19,8 +20,8 @@ To become a well-rounded developer who can confidently ship code — not just wr
 
 ## Out of scope
 
-- Kubernetes orchestration (for now)
-- Cloud-specific deployment targets (AWS ECS, GCP Cloud Run, etc.)
+- Kubernetes orchestration (Phase 3 Docker lessons are intentionally designed as a ramp into K8s — Volumes → PV/PVC, Networks → Services, Compose → Deployments)
+- Cloud-specific deployment targets (AWS ECS, GCP Cloud Run, etc.) — for now
 - GitLab CI, Jenkins, or other CI systems
 - Advanced security hardening (OIDC, supply-chain signing)
 `

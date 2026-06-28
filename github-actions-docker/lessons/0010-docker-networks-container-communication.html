@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 10 — Docker Networks &amp; Container Communication</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+  <nav class="lesson-nav">
+    <a href="0009-docker-volumes-persistent-data.html">← Lesson 09</a>
+  </nav>
+
+  <div class="lesson-number">Lesson 10</div>
+  <h1>Docker Networks &amp; Container Communication</h1>
+  <p class="subtitle">How containers find and talk to each other — and why <code>localhost</code> is not the answer.</p>
+
+  <p><strong>📖 Primary source:</strong> <a href="https://docs.docker.com/network/">Docker Networking overview</a> · <a href="https://docs.docker.com/network/drivers/bridge/">Bridge network driver</a></p>
+
+  <!-- ─────────────────────────────── -->
+  <h2>The Core Problem: Containers Are Islands</h2>
+
+  <p>Every Docker container lives inside its own isolated network namespace. Two containers running side-by-side on the same machine are, by default, <strong>completely invisible to one another</strong>.</p>
+
+  <p>If you run a Node.js API in container A and a PostgreSQL database in container B, the API <em>cannot</em> connect to the database using <code>localhost</code>. Inside container A, <code>localhost</code> resolves to container A's own loopback interface—not to container B. The database doesn't exist in container A's universe.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The Kubernetes parallel</span>
+    <p>In Kubernetes, this maps directly to the concept of <strong>Services</strong>. A K8s Service gives a stable DNS name to a group of pods. Without it, pods are also islands that can't find each other. Learning Docker networks now makes Kubernetes Services feel like a natural extension—not a new concept.</p>
+  </div>
+
+  <!-- ─────────────────────────────── -->
+  <h2>Docker Network Types</h2>
+
+  <p>Docker ships with several network drivers. You'll encounter three in practice:</p>
+
+  <ul>
+    <li><strong>bridge</strong> (default): A private internal network on your host. Containers on the same bridge network can communicate. Containers on different bridge networks cannot. This is what you'll use for almost everything.</li>
+    <li><strong>host</strong>: Removes network isolation entirely. The container shares your host machine's network stack directly. Port 3000 in the container is port 3000 on your Mac—no mapping needed. Only available on Linux (not Mac or Windows Docker Desktop).</li>
+    <li><strong>none</strong>: Complete network isolation. Container has no network interface at all. Used for batch jobs that shouldn't touch the network.</li>
+  </ul>
+
+  <!-- ─────────────────────────────── -->
+  <h2>User-Defined Bridge Networks: The Right Way</h2>
+
+  <p>Docker creates a built-in bridge network called <code>bridge</code> (also known as <code>docker0</code>). You can connect containers to it, and they'll be able to reach each other by IP—but <strong>not by name</strong>. The default bridge network does not provide DNS.</p>
+
+  <p>User-defined bridge networks solve this. When you create your own network, Docker automatically runs a DNS server for it. Every container on that network is reachable from any other container by its <code>--name</code>.</p>
+
+<pre><code><span class="code-comment"># Create your own private network</span>
+docker network create my_app_net
+
+<span class="code-comment"># Start a postgres database on that network</span>
+<span class="code-comment"># The container is named 'postgres_db' — this becomes its DNS hostname</span>
+docker run -d \
+  --name <span class="code-keyword">postgres_db</span> \
+  --network my_app_net \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=myapp \
+  postgres:15
+
+<span class="code-comment"># Start an API container on the SAME network</span>
+<span class="code-comment"># The connection string uses 'postgres_db' as the hostname — not 'localhost'</span>
+docker run -d \
+  --name api_server \
+  --network my_app_net \
+  -p 3000:3000 \
+  -e DATABASE_URL=postgresql://postgres:secret@<span class="code-keyword">postgres_db</span>:5432/myapp \
+  my_api_image</code></pre>
+
+  <p>Notice what just happened: the API container uses <code>postgres_db</code> as the hostname in its database URL. Docker resolves that name to the correct container's IP address automatically.</p>
+
+  <!-- ─────────────────────────────── -->
+  <h2>The Expose vs Publish Distinction</h2>
+
+  <p>This is one of the most misunderstood things in Docker. There are two completely separate mechanisms for ports, and conflating them causes real security problems.</p>
+
+  <table style="width:100%; border-collapse:collapse; margin: 1rem 0; font-size: 0.9rem;">
+    <thead>
+      <tr style="border-bottom: 2px solid #e2e8f0;">
+        <th style="text-align:left; padding: 0.5rem; font-family: var(--sans);">Mechanism</th>
+        <th style="text-align:left; padding: 0.5rem; font-family: var(--sans);">Flag</th>
+        <th style="text-align:left; padding: 0.5rem; font-family: var(--sans);">Who can access?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 0.5rem;"><strong>Automatic (network)</strong></td>
+        <td style="padding: 0.5rem; font-family: var(--mono);">none needed</td>
+        <td style="padding: 0.5rem;">Other containers on the same Docker network. All ports are open between them.</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 0.5rem;"><strong>EXPOSE in Dockerfile</strong></td>
+        <td style="padding: 0.5rem; font-family: var(--mono);">EXPOSE 5432</td>
+        <td style="padding: 0.5rem;">Nobody. It is documentation only. It does not open any port to anyone.</td>
+      </tr>
+      <tr>
+        <td style="padding: 0.5rem;"><strong>Publish</strong></td>
+        <td style="padding: 0.5rem; font-family: var(--mono);">-p 5432:5432</td>
+        <td style="padding: 0.5rem;">Your host machine and, depending on firewall rules, the public internet.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>The security implication:</strong> never publish your database port (<code>-p 5432:5432</code>) in production. Your API container can reach the database over the Docker network without it. Publishing a database port exposes it to the internet.</p>
+
+  <!-- ─────────────────────────────── -->
+  <h2>Inspecting a Network</h2>
+
+  <p>When things go wrong—a container can't reach another—your first tool is <code>docker network inspect</code>. It shows you exactly which containers are connected and their internal IPs.</p>
+
+<pre><code>docker network inspect my_app_net</code></pre>
+
+  <p>Look for the <code>"Containers"</code> key in the output. If your container isn't listed there, it's not on the network—that's your bug.</p>
+
+  <!-- ─────────────────────────────── -->
+  <h2>Your Turn: Prove DNS Works</h2>
+
+  <p>Run this experiment yourself. You'll prove that two containers can discover each other by name on a user-defined network—something that is impossible on the default bridge.</p>
+
+  <ol>
+    <li>Create a network:<br><code>docker network create test_net</code></li>
+    <li>Start a "database" container (just a sleeping Alpine—no real DB needed):<br><code>docker run -d --name my_database --network test_net alpine sleep 600</code></li>
+    <li>Start a second "API" container on the same network and drop into its shell:<br><code>docker run -it --rm --name my_api --network test_net alpine sh</code></li>
+    <li>From inside the API container, ping the database by its container name:<br><code>ping my_database</code><br>You should see packets responding. Press <code>Ctrl+C</code> to stop.</li>
+    <li>Now try to reach it by IP. Run <code>nslookup my_database</code> inside the shell to see what IP Docker assigned it. Note the IP, then <code>ping [that IP]</code> directly—it also works.</li>
+    <li>Exit: <code>exit</code></li>
+    <li>Now repeat the experiment <em>without</em> a custom network. Run the database on the default bridge (omit <code>--network test_net</code>), start a new API shell, and try <code>ping my_database</code>. You'll see it fail—name resolution doesn't exist on the default bridge.</li>
+    <li>Clean up: <code>docker rm -f my_database &amp;&amp; docker network rm test_net</code></li>
+  </ol>
+
+  <p>The fact that name resolution works on user-defined networks but not the default bridge is the reason <strong>every real Docker setup always creates a named network</strong>—whether you write it manually or use Docker Compose.</p>
+
+  <p>📎 Reference: <a href="../reference/docker-cheat-sheet.html">Docker Cheat Sheet</a> — the Networks section has all the commands you need.</p>
+
+  <p><em>Questions? Just ask. Next up: Lesson 11 — Docker Compose, where we automate all of this in a single YAML file and never run these long docker run commands by hand again.</em></p>
+
+  <!-- ─────────────────────────────── -->
+  <div class="lesson-footer">
+    <p><a href="0009-docker-volumes-persistent-data.html">← Lesson 09: Docker Volumes &amp; Persistent Data</a></p>
+  </div>
+
+</body>
+</html>
