@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 01, Lesson 2 — Bounded Contexts &amp; DDD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/lesson.css" />
+</head>
+<body>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Course progress</span>
+      <span>Module 01 of 15 — Phase 1 of 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 8%;"></div></div>
+  </div>
+
+  <!-- Header -->
+  <div class="lesson-number">Module 01 · Foundations · Lesson 2 of 3</div>
+  <h1>Bounded Contexts &amp; DDD</h1>
+  <p class="subtitle">
+    How to draw service boundaries that match the business — not your folder structure.
+    The framework that tells you where the lines go, and why your 30-module monolith
+    isn't 30 microservices.
+  </p>
+
+  <div class="pills">
+    <span class="pill pill-accent">⏱ 30 min read</span>
+    <span class="pill pill-green">Phase 1 — Foundations &amp; Design</span>
+    <span class="pill">Prereq: <a href="0001-what-microservices-actually-are.html">Lesson 1</a></span>
+  </div>
+
+  <!-- Primary Source -->
+  <p class="primary-source">
+    📖 <strong>Primary source:</strong>
+    <a href="https://martinfowler.com/bliki/BoundedContext.html">Martin Fowler, "Bounded Context"</a>
+    — the clearest explanation of the concept. Read alongside
+    Sam Newman, <a href="https://samnewman.io/books/building_microservices_2nd_edition/"><em>Building Microservices</em></a> Ch. 2 ("How to Model Services")
+    and Eric Evans, <a href="https://www.domainlanguage.com/ddd/"><em>Domain-Driven Design</em></a> Ch. 14 ("Maintaining Model Integrity").
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       1. THE PROBLEM WITH YOUR FOLDER STRUCTURE
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Your folder structure is not a service map</h2>
+
+  <p>
+    You told me your monolith has ~30 modules under <code>service/v1/</code> — campaign, influencer,
+    brand, finance, analytics, notification, coupon, package, and more. Your instinct is to
+    say: "Each of these could be a microservice."
+  </p>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">This is the #1 decomposition mistake</span>
+    <p>
+      Mapping folders to services is <strong>technical decomposition</strong> — slicing by code structure,
+      not by business capability.<a class="cite" href="https://samnewman.io/books/building_microservices_2nd_edition/" title="Newman, Building Microservices 2nd Ed., Ch. 2">[1]</a>
+      The result: 30 services that constantly call each other, share database tables, and can't
+      be deployed independently. You've just built a
+      <a href="../../reference/glossary.html#distributed-monolith">distributed monolith</a> with 30x the operational cost.
+    </p>
+  </div>
+
+  <p>
+    The right question isn't "which folders can I extract?" It's:
+    <strong>"Which parts of the business can make decisions without asking anyone else?"</strong>
+  </p>
+
+  <p>
+    That question is what Domain-Driven Design answers.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       2. WHAT DDD ACTUALLY IS (AND ISN'T)
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>What DDD actually is (and isn't)</h2>
+
+  <p>
+    Eric Evans introduced Domain-Driven Design in
+    2003.<a class="cite" href="https://www.domainlanguage.com/ddd/" title="Evans, Domain-Driven Design, 2003">[2]</a>
+    It's a 560-page book, and 90% of the internet gets it wrong.
+    Here's what matters for microservice boundaries:
+  </p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">DDD has two halves — you only need one right now</span>
+    <p>
+      <strong>Strategic Design</strong> (the half we need): how to divide a large system into
+      Bounded Contexts and manage the relationships between them. This tells you <em>where</em> the
+      service boundaries go.<br />
+      <strong>Tactical Design</strong> (the half we don't need yet): Entities, Value Objects, Aggregates,
+      Repositories — how to structure code <em>inside</em> a single service. We'll cover this
+      in Module 02.
+    </p>
+  </div>
+
+  <p>
+    DDD is <em>not</em>: an architecture pattern, a coding framework, or something that requires
+    special libraries. It's a way of thinking about where business boundaries are.
+    You can apply Strategic DDD to your existing monolith <em>right now</em>, without changing
+    a single line of code.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       3. UBIQUITOUS LANGUAGE
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Ubiquitous Language — the boundary detector</h2>
+
+  <p>
+    The most powerful concept in DDD is also the simplest:
+    <strong><a href="../../reference/glossary.html#ubiquitous-language">Ubiquitous Language</a></strong>.
+  </p>
+
+  <p>
+    Within a single team or context, every term should mean exactly one
+    thing.<a class="cite" href="https://www.domainlanguage.com/ddd/" title="Evans, DDD, Ch. 2">[2]</a>
+    Developers, product managers, and domain experts should all use the same words
+    — and those words should appear in the code.
+  </p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">The test — applied to your codebase</span>
+    <p>
+      Think about the word <strong>"campaign"</strong> in your system. Does it mean the same thing everywhere?
+    </p>
+    <ul style="margin-top: 0.75rem; margin-bottom: 0;">
+      <li>In <code>service/v1/campaign/</code>: a brand's marketing campaign with deliverables, timelines, and creator assignments</li>
+      <li>In <code>service/v1/music-campaign/</code>: a music promotion with different rules, different metrics, different lifecycle</li>
+      <li>In <code>service/v1/analytics/</code>: a data record to aggregate performance metrics against</li>
+      <li>In <code>service/v1/finance/</code>: a billing entity that triggers payments to creators</li>
+    </ul>
+  </div>
+
+  <p>
+    When the same word means different things in different parts of the system, you've found
+    a <strong>context boundary</strong>.<a class="cite" href="https://martinfowler.com/bliki/BoundedContext.html" title="Fowler, Bounded Context">[3]</a>
+    A "campaign" in Finance is not the same model as a "campaign" in Analytics. They have
+    different fields, different rules, and different reasons to change. Forcing them into a single
+    <code>Campaign</code> model is what creates the coupling you're fighting.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       4. BOUNDED CONTEXT
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Bounded Context — the actual boundary</h2>
+
+  <p>
+    A <strong><a href="../../reference/glossary.html#bounded-context">Bounded Context</a></strong>
+    is the boundary within which a particular domain model is defined and
+    consistent.<a class="cite" href="https://martinfowler.com/bliki/BoundedContext.html" title="Fowler, Bounded Context">[3]</a>
+    Inside a Bounded Context:
+  </p>
+
+  <ul>
+    <li>Every term has <em>one</em> meaning (the Ubiquitous Language holds)</li>
+    <li>The model is internally consistent — no contradictions</li>
+    <li>The team can change the model without coordinating with other contexts</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The critical insight</span>
+    <p>
+      A Bounded Context is <strong>not</strong> the same thing as a microservice.<a class="cite" href="https://martinfowler.com/bliki/BoundedContext.html" title="Fowler, Bounded Context">[3]</a>
+      A Bounded Context is a <em>conceptual</em> boundary. A microservice is a <em>deployment</em> boundary.
+      They often align, but the mapping is not always 1:1.
+    </p>
+    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+      <li>One Bounded Context → one microservice (common, clean)</li>
+      <li>One Bounded Context → multiple microservices (when the context is large enough to warrant it)</li>
+      <li>Multiple Bounded Contexts → one deployment (the Modular Monolith — still valid!)</li>
+    </ul>
+  </div>
+
+  <h3>How to find your Bounded Contexts</h3>
+
+  <p>
+    Fowler's advice:<a class="cite" href="https://martinfowler.com/bliki/BoundedContext.html" title="Fowler, Bounded Context">[3]</a>
+    don't try to build one unified model for the whole system. Instead, identify the natural
+    boundaries where language diverges. Three heuristics:
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Heuristic</th>
+          <th>How to apply it</th>
+          <th>Example from your codebase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Language divergence</strong></td>
+          <td>Where the same word means different things</td>
+          <td>"Campaign" in <code>campaign/</code> vs <code>finance/</code> vs <code>analytics/</code></td>
+        </tr>
+        <tr>
+          <td><strong>Rate of change</strong></td>
+          <td>Which parts change together vs independently</td>
+          <td>Auth rarely changes; Campaign changes weekly</td>
+        </tr>
+        <tr>
+          <td><strong>Team ownership</strong></td>
+          <td>Who "owns" this business capability?</td>
+          <td>Does the same team own both <code>influencer/</code> and <code>talentAgency/</code>?</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       5. APPLYING IT TO YOUR MONOLITH
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Your 30 modules → maybe 6 Bounded Contexts</h2>
+
+  <p>
+    Let's walk through your <code>service/v1/</code> directory and group modules into candidate
+    Bounded Contexts. This is a <em>first draft</em> — the real discovery happens by talking to
+    domain experts and watching where language diverges.
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidate Bounded Context</th>
+          <th>Modules that likely belong</th>
+          <th>Why they're cohesive</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Campaign Management</strong></td>
+          <td><code>campaign</code>, <code>music-campaign</code></td>
+          <td>Both are variants of "a brand hires creators to produce content." Same business capability, same lifecycle patterns, different configurations.</td>
+        </tr>
+        <tr>
+          <td><strong>Creator (Influencer) Identity</strong></td>
+          <td><code>influencer</code>, <code>talentAgency</code>, <code>xCommunity</code></td>
+          <td>Who creators are, their profiles, their relationships with agencies. The "creator" model here is about identity and representation.</td>
+        </tr>
+        <tr>
+          <td><strong>Finance &amp; Payments</strong></td>
+          <td><code>finance</code>, <code>cashfreeKyc</code>, <code>coupon</code>, <code>earnkaro</code></td>
+          <td>Money flowing: payouts, KYC verification, coupons, affiliate earnings. All need transaction guarantees.</td>
+        </tr>
+        <tr>
+          <td><strong>Brand &amp; Commerce</strong></td>
+          <td><code>brand</code>, <code>package</code>, <code>serviceRequests</code></td>
+          <td>The buyer side: brand onboarding, service packages, brand-initiated requests.</td>
+        </tr>
+        <tr>
+          <td><strong>Communication &amp; Engagement</strong></td>
+          <td><code>notification</code>, <code>mailTrigger</code>, <code>whatsappTrigger</code></td>
+          <td>All about reaching users through different channels. The business concept is "send a message" — the channel is an implementation detail.</td>
+        </tr>
+        <tr>
+          <td><strong>Intelligence &amp; Data</strong></td>
+          <td><code>analytics</code>, <code>report</code>, <code>soundCharts</code>, <code>xley-ai</code>, <code>openai</code></td>
+          <td>Read-heavy, analytics-focused. Different data models, different query patterns, different scaling needs.</td>
+        </tr>
+      </tbody>
+    </table>
+    <span class="arch-label">
+      That leaves auth, permission, healthChecker, redisData, shortLink, tenant, trulioo, creatorsUnited, masterclassVideo as either supporting subdomains or cross-cutting concerns — not Bounded Contexts of their own.
+    </span>
+  </div>
+
+  <p>
+    Notice: <strong>30 modules → 6 candidate contexts.</strong> That's the power of thinking in business
+    capabilities instead of code structure. Six services is manageable. Thirty is a
+    maintenance nightmare.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       6. CORE, SUPPORTING, GENERIC SUBDOMAINS
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Not all contexts are equal — Core vs Supporting vs Generic</h2>
+
+  <p>
+    Evans introduces a concept called
+    <strong>distillation</strong>:<a class="cite" href="https://www.domainlanguage.com/ddd/" title="Evans, DDD, Ch. 15">[2]</a>
+    not all parts of your system deserve equal investment. There are three types of subdomains:
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Definition</th>
+          <th>In your system</th>
+          <th>Build or buy?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="yes"><strong>Core Domain</strong></td>
+          <td>The thing that makes your business unique. What you'd pitch to investors. Your competitive advantage.</td>
+          <td>Campaign Management + Creator Matching — this is what Xley <em>does</em></td>
+          <td class="yes">Build (invest deeply)</td>
+        </tr>
+        <tr>
+          <td class="mid"><strong>Supporting</strong></td>
+          <td>Necessary for the Core to function, but not your unique value proposition. Custom, but not strategic.</td>
+          <td>Brand onboarding, Analytics dashboards, Creator profiles</td>
+          <td class="mid">Build (keep lean)</td>
+        </tr>
+        <tr>
+          <td><strong>Generic</strong></td>
+          <td>Solved problems. Not specific to your business. Everyone needs this.</td>
+          <td>Auth, Notifications, KYC, Payments processing, Short links</td>
+          <td>Buy / use SaaS / open-source</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-warn">
+    <span class="callout-label">The investment trap</span>
+    <p>
+      Most engineering teams over-invest in Generic subdomains (building custom auth systems,
+      custom notification pipelines) and under-invest in the Core Domain. Every hour spent
+      perfecting your notification system is an hour <em>not</em> spent on what makes your business
+      different. This is why microservice boundaries matter — they force you to make this
+      prioritisation explicit.<a class="cite" href="https://samnewman.io/books/building_microservices_2nd_edition/" title="Newman, Building Microservices, Ch. 2">[1]</a>
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       7. CONTEXT MAPPING — HOW CONTEXTS TALK
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Context Mapping — how contexts relate to each other</h2>
+
+  <p>
+    Once you've identified your Bounded Contexts, the next question is: how do they
+    communicate?<a class="cite" href="https://www.domainlanguage.com/ddd/" title="Evans, DDD, Ch. 14">[2]</a>
+    In your monolith, the answer is "direct function calls and shared database tables." In a
+    microservices world, you need explicit relationships. DDD defines several patterns:
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Pattern</th>
+          <th>What it means</th>
+          <th>When you'd use it</th>
+          <th>In your system</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong><a href="../../reference/glossary.html#anti-corruption-layer">Anti-Corruption Layer</a> (ACL)</strong></td>
+          <td>A translation layer that converts another context's model into your own</td>
+          <td>When integrating with a legacy or external system whose model you don't control</td>
+          <td>Your <code>cashfreeKyc</code> module wrapping Cashfree's API — you're already doing this</td>
+        </tr>
+        <tr>
+          <td><strong>Customer–Supplier</strong></td>
+          <td>Upstream context serves downstream; downstream can influence the upstream's priorities</td>
+          <td>When one team depends on another and they can negotiate</td>
+          <td>Campaign Management (customer) ← Creator Identity (supplier): campaigns need creator data</td>
+        </tr>
+        <tr>
+          <td><strong>Conformist</strong></td>
+          <td>Downstream accepts the upstream's model as-is, no translation</td>
+          <td>When you have no leverage over the upstream (e.g., third-party APIs)</td>
+          <td>Your <code>soundCharts</code> module conforming to SoundCharts' API model exactly</td>
+        </tr>
+        <tr>
+          <td><strong>Shared Kernel</strong></td>
+          <td>Two contexts share a small, explicit subset of the model</td>
+          <td>When duplication is truly harmful and teams coordinate tightly</td>
+          <td>Your shared <code>helper.js</code> (3600+ lines) is an <em>accidental</em> shared kernel</td>
+        </tr>
+        <tr>
+          <td><strong>Partnership</strong></td>
+          <td>Two contexts evolve together, coordinating releases</td>
+          <td>When two features must succeed or fail together</td>
+          <td>Campaign + Finance (payout happens when campaign completes)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">Your helper.js is a coupling bomb</span>
+    <p>
+      A 3,600-line shared utility file that every module imports is the definition of an
+      <strong>accidental Shared Kernel</strong>. In DDD terms, it means every module is implicitly
+      coupled to every other module that uses the same helper function.
+      A change to a date formatting function in <code>helper.js</code> can break
+      campaign creation, analytics reports, and payment processing simultaneously.
+    </p>
+    <p>
+      In a microservices world, this file must be either:
+    </p>
+    <ul style="margin-bottom: 0;">
+      <li><strong>Split</strong> — each context gets only the utilities it needs (copied, not shared)</li>
+      <li><strong>Published</strong> — turned into a versioned internal npm package with semver guarantees</li>
+      <li><strong>Eliminated</strong> — most "utility" functions belong inside the context that uses them</li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       8. THE ANTI-CORRUPTION LAYER IN DEPTH
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>The Anti-Corruption Layer — your most important pattern</h2>
+
+  <p>
+    When two Bounded Contexts communicate, the worst thing that can happen is <strong>model
+    leakage</strong>: one context's internal model bleeds into another, coupling them at the
+    data-structure level.<a class="cite" href="https://www.domainlanguage.com/ddd/" title="Evans, DDD, Ch. 14">[2]</a>
+  </p>
+
+  <p>
+    The <a href="../../reference/glossary.html#anti-corruption-layer">Anti-Corruption Layer (ACL)</a>
+    prevents this by acting as a translator.
+    Here's what it looks like in your monolith today vs. what it should look like:
+  </p>
+
+  <h3>❌ What you probably have now</h3>
+  <pre><code><span class="code-comment">// campaign/campaign-helper.js</span>
+<span class="code-keyword">const</span> <span class="code-variable">influencerService</span> = <span class="code-keyword">require</span>(<span class="code-string">'../influencer/influencer'</span>);
+
+<span class="code-keyword">async function</span> <span class="code-variable">assignCreatorToCampaign</span>(campaignId, influencerId) {
+  <span class="code-comment">// Direct coupling: Campaign knows Influencer's internal model</span>
+  <span class="code-keyword">const</span> <span class="code-variable">influencer</span> = <span class="code-keyword">await</span> influencerService.getInfluencer(influencerId);
+
+  <span class="code-comment">// Campaign code reaches into Influencer's internal fields</span>
+  <span class="code-keyword">const</span> <span class="code-variable">rate</span> = influencer.pricing.perPostRate;
+  <span class="code-keyword">const</span> <span class="code-variable">platform</span> = influencer.socialAccounts[0].platform;
+  <span class="code-keyword">const</span> <span class="code-variable">followers</span> = influencer.socialAccounts[0].followers;
+  <span class="code-comment">// ...</span>
+}</code></pre>
+
+  <h3>✅ What an ACL looks like</h3>
+  <pre><code><span class="code-comment">// campaign/acl/creator-adapter.js</span>
+<span class="code-comment">// Translates the Creator context's model into Campaign's language</span>
+
+<span class="code-keyword">class</span> <span class="code-variable">CreatorAdapter</span> {
+  <span class="code-keyword">constructor</span>(creatorService) {
+    <span class="code-keyword">this</span>.creatorService = creatorService;
+  }
+
+  <span class="code-keyword">async</span> <span class="code-variable">getAssignableCreator</span>(creatorId) {
+    <span class="code-keyword">const</span> <span class="code-variable">raw</span> = <span class="code-keyword">await</span> <span class="code-keyword">this</span>.creatorService.getInfluencer(creatorId);
+
+    <span class="code-comment">// Translation: Campaign context only knows what it needs</span>
+    <span class="code-keyword">return</span> {
+      id:           raw.id,
+      displayName:  raw.name,
+      rate:         raw.pricing?.perPostRate ?? <span class="code-keyword">null</span>,
+      reach:        raw.socialAccounts?.[0]?.followers ?? 0,
+      platform:     raw.socialAccounts?.[0]?.platform ?? <span class="code-string">'unknown'</span>,
+    };
+  }
+}
+</code></pre>
+
+  <p>
+    The key insight: Campaign doesn't know (or care) that the creator data has
+    <code>socialAccounts[0].followers</code>. It only knows about <code>reach</code>. When the
+    Creator context changes its internal model, only the adapter breaks — not the entire
+    Campaign service.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       9. THE MAPPING EXERCISE
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Why "where do I draw the lines?" was the wrong question</h2>
+
+  <p>
+    You came into this course asking: "Where do I draw the service boundaries in my monolith?"
+    After this lesson, you should see why that question was premature.
+  </p>
+
+  <p>
+    The right sequence is:
+  </p>
+
+  <ol>
+    <li><strong>Find the language boundaries</strong> — where does the same word mean different things?</li>
+    <li><strong>Identify the Bounded Contexts</strong> — group modules by business capability, not code structure</li>
+    <li><strong>Classify them</strong> — Core, Supporting, or Generic?</li>
+    <li><strong>Map the relationships</strong> — which Context Mapping pattern fits each relationship?</li>
+    <li><strong>Only then</strong> — decide which contexts deserve to be independently deployable services</li>
+  </ol>
+
+  <p>
+    Step 5 is where microservices enter the picture. Steps 1–4 are pure DDD, and they're
+    valuable even if you never extract a single service. A
+    <a href="../../reference/glossary.html#modular-monolith">Modular Monolith</a> with well-defined
+    Bounded Contexts is a perfectly valid architecture.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       EXERCISE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="exercise">
+    <span class="exercise-label">Exercise — Module 01, Lesson 2</span>
+    <h3>Draw your Context Map</h3>
+
+    <p style="margin-top: 0.75rem;">
+      Using your actual monolith (or the candidate Bounded Contexts from this lesson), create
+      a Context Map:
+    </p>
+
+    <ol>
+      <li>
+        <strong>List your Bounded Contexts</strong> (start with the 6 candidates above, adjust based on
+        what you know about your codebase).
+      </li>
+      <li>
+        <strong>For each pair that communicates</strong>, label the relationship pattern:
+        Customer–Supplier, Conformist, ACL, Shared Kernel, or Partnership.
+      </li>
+      <li>
+        <strong>Classify each context</strong>: Core Domain, Supporting, or Generic.
+      </li>
+      <li>
+        <strong>Find your helper.js dependencies</strong>: pick 3 functions from your <code>helper.js</code> and
+        trace which modules call them. Could those functions live <em>inside</em> the context instead?
+      </li>
+    </ol>
+
+    <p>
+      <strong>Success criterion:</strong> You can explain why "Campaign Management" and "Finance" are
+      separate Bounded Contexts, even though they share the word "campaign" — and you can name
+      the Context Mapping pattern that connects them.
+    </p>
+
+    <p style="margin-top: 0.75rem; color: #047857; font-family: var(--sans); font-size: 0.88rem;">
+      Share your Context Map before moving to Lesson 3 (Service Boundaries &amp; Decomposition Strategies).
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ASK YOUR TEACHER
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="ask-teacher">
+    💬 <strong>Stuck or curious?</strong> Ask me anything about this lesson.
+    Common questions at this stage: "Is my helper.js really that bad?", "How do I convince
+    my team to think in Bounded Contexts?", "What if my contexts share a database?"
+    There are no dumb questions, only untested assumptions.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       RETRIEVAL PRACTICE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p style="font-family: var(--sans); font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Answer from memory before revealing. The slight difficulty is the point — it's where storage strength builds.
+    </p>
+
+    <div class="retrieval-question">
+      1. What is a Bounded Context, and how does it differ from a microservice?
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        A <a href="../../reference/glossary.html#bounded-context">Bounded Context</a> is a <em>conceptual</em> boundary within which a domain model and its language are consistent.
+        A microservice is a <em>deployment</em> boundary. They often align, but a context can contain
+        multiple services, or multiple contexts can live in one deployment (Modular Monolith).
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      2. What is Ubiquitous Language, and how do you detect that it has broken down?
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        <a href="../../reference/glossary.html#ubiquitous-language">Ubiquitous Language</a> is a shared, precise vocabulary used consistently by developers and domain experts
+        within a Bounded Context. It breaks down when the same word means different things in different
+        parts of the system — that divergence signals a context boundary.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      3. Name the three types of subdomains in DDD and give an example from an influencer marketing platform.
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        <strong>Core Domain</strong> — Campaign Management + Creator Matching (competitive advantage).<br />
+        <strong>Supporting Subdomain</strong> — Analytics dashboards, Brand onboarding (necessary but not unique).<br />
+        <strong>Generic Subdomain</strong> — Auth, Notifications, KYC (solved problems; buy or reuse).
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      4. What is an Anti-Corruption Layer, and why is it critical when two contexts communicate?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        An <a href="../../reference/glossary.html#anti-corruption-layer">ACL</a> is a translation layer that converts one context's model into another's language.
+        Without it, one context's internal model leaks into another, coupling them at the data-structure level.
+        When the upstream context changes its model, the downstream context breaks — unless the ACL absorbs the change.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      5. Why is mapping folders to services considered the #1 decomposition mistake?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        Folders represent technical structure (code organisation), not business capability.
+        Services split by folder produce a <a href="../../reference/glossary.html#distributed-monolith">distributed monolith</a>:
+        many services that share databases, call each other for every operation, and can't deploy independently.
+        You get all the operational complexity with none of the autonomy.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      6. What are the five DDD Context Mapping patterns, and which one describes your helper.js?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        Partnership, Shared Kernel, Customer–Supplier, Conformist, Anti-Corruption Layer.<br />
+        <code>helper.js</code> is an <strong>accidental Shared Kernel</strong>: a large, unversioned body of shared code
+        that couples every module that imports it. Changes propagate unpredictably.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      7. You have 30 service modules. After applying DDD Strategic Design, roughly how many
+      Bounded Contexts did the analysis suggest, and why the dramatic reduction?
+      <span class="recall-tag r7d">RECALL-7D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        ~6 Bounded Contexts. The reduction comes from grouping by <em>business capability</em> instead of
+        code structure. Many modules (e.g., notification, mailTrigger, whatsappTrigger) serve the same
+        business function through different channels — they're one context, not three services.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      8. What is the correct sequence of steps before deciding which contexts become microservices?
+      <span class="recall-tag r7d">RECALL-7D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        1. Find language boundaries. 2. Identify Bounded Contexts. 3. Classify as Core/Supporting/Generic.
+        4. Map relationships (Context Mapping). 5. Only then decide which contexts merit independent deployment.
+        Steps 1–4 are valuable even in a monolith.
+      </p>
+    </details>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       INTERVIEW PREPARATION
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Interview preparation</h2>
+
+  <div class="interview-tier">
+    <span class="tier-label t1">Tier 1 — Startup / Mid-Market</span>
+    <ul>
+      <li>What is Domain-Driven Design? Do you need it for microservices?</li>
+      <li>What is a Bounded Context? Give an example from a system you've worked on.</li>
+      <li>How do you decide where to draw service boundaries?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t2">Tier 2 — Senior Engineer (FAANG-Adjacent)</span>
+    <ul>
+      <li>Explain the difference between a Bounded Context and a microservice. Can they be different?</li>
+      <li>What is an Anti-Corruption Layer, and when would you use one instead of direct integration?</li>
+      <li>Your team has a 4,000-line shared utility module. How does DDD inform what you do with it?</li>
+      <li>Explain Core Domain vs Generic Subdomain. How does this classification affect your engineering investment?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t3">Tier 3 — Staff Engineer (FAANG)</span>
+    <ul>
+      <li>You've been asked to decompose a monolith with 30 modules into microservices. Walk me through your approach using DDD Strategic Design.</li>
+      <li>Two teams disagree on service boundaries. The Campaign team wants to own payment logic; the Finance team says no. How do you resolve this using DDD concepts?</li>
+      <li>Describe all five Context Mapping relationships. For a given e-commerce system, assign each pattern to a real integration point.</li>
+      <li>What does Conway's Law (from Lesson 1) have to do with Bounded Contexts? How do they reinforce each other?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t4">Tier 4 — Production Scenario</span>
+    <ul>
+      <li>Your team split the monolith into 15 services. Six months later, every feature requires changes to 4+ services. Diagnose the problem using DDD vocabulary and propose a fix.</li>
+      <li>You discover that the word "user" means four different things across your microservices: a registered account, a creator profile, a billing entity, and an analytics data point. What DDD concept is violated, and how do you fix it without rewriting everything?</li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SOURCES
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Sources</h2>
+  <ol style="font-family: var(--sans); font-size: 0.85rem; color: var(--muted);">
+    <li id="src-1"><a href="https://samnewman.io/books/building_microservices_2nd_edition/">Newman, <em>Building Microservices</em> 2nd Ed. (2021)</a> — Ch. 2: How to Model Services</li>
+    <li id="src-2"><a href="https://www.domainlanguage.com/ddd/">Evans, <em>Domain-Driven Design: Tackling Complexity in the Heart of Software</em> (2003)</a> — the original DDD book</li>
+    <li id="src-3"><a href="https://martinfowler.com/bliki/BoundedContext.html">Fowler, "Bounded Context" (2014)</a> — canonical explanation</li>
+    <li id="src-4"><a href="https://microservices.io/patterns/decomposition/decompose-by-business-capability.html">Richardson, "Decompose by Business Capability" (microservices.io)</a> — pattern reference</li>
+    <li id="src-5"><a href="https://martinfowler.com/bliki/UbiquitousLanguage.html">Fowler, "Ubiquitous Language" (2006)</a></li>
+  </ol>
+
+
+  <!-- Footer -->
+  <div class="lesson-footer">
+    <p>
+      <strong>Lesson 2 of 3 complete.</strong> You now have the framework:
+      <em><a href="../../reference/glossary.html#bounded-context">Bounded Contexts</a></em> tell you where the business boundaries are.
+      <em><a href="../../reference/glossary.html#ubiquitous-language">Ubiquitous Language</a></em> tells you how to detect them.
+      <em><a href="../../reference/glossary.html#context-mapping">Context Mapping</a></em> tells you how they relate.
+    </p>
+    <p style="margin-top: 0.5rem;">
+      Complete the exercise above, then ask for <strong>Lesson 3: Service Boundaries &amp; Decomposition Strategies</strong>.
+    </p>
+    <p style="margin-top: 1rem;">
+      📚 <a href="../../reference/glossary.html">Glossary</a>
+      &nbsp;·&nbsp;
+      ← <a href="0001-what-microservices-actually-are.html">Lesson 1: What Microservices Actually Are</a>
+    </p>
+  </div>
+
+</body>
+</html>

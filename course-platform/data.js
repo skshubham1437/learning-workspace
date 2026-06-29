@@ -68,7 +68,11 @@ const courseData = [
         "lessons": [
             {
                 "title": "Module 01, Lesson 1 — What Microservices Actually Are",
-                "path": "../microservices-nodejs/phase-1-foundations-and-design/0001-what-microservices-actually-are.html"
+                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html"
+            },
+            {
+                "title": "Module 01, Lesson 2 — Bounded Contexts &amp; DDD",
+                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0002-bounded-contexts-and-ddd.html"
             },
             {
                 "title": "Glossary — Microservices &amp; Distributed Systems",

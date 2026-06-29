@@ -8,7 +8,7 @@
 - **Basic in:** Redis (key-value caching only), observability (console.log + winston + PM2), Docker Compose (single-container)
 - **Can whiteboard:** CAP theorem (basic), eventual consistency (basic), idempotency (correct model)
 - **Has heard of but cannot explain:** Circuit breaker, Saga, Event sourcing, CQRS
-- **Never built:** real-world microservices, distributed architectures, used Kafka/RabbitMQ/gRPC/Istio/K8s
+- **Never built:** real-world microservices, distributed architectures, Kafka/RabbitMQ/gRPC/Istio/K8s
 - **Key motivator:** Has a large Express monolith with clear module separation, has already thought about splitting it but doesn't know where to draw service boundaries
 
 ## Teaching Preferences
@@ -37,11 +37,13 @@
 
 ## Progress Tracking
 
-- Current Module: 01 — Foundations (Lesson 1 complete)
-- Exercises Pending: "Map your monolith's coupling surface" (Lesson 1 exercise)
+- Current Module: 01 — Foundations (Lesson 2 delivered)
+- Exercises Pending: "Draw your Context Map" (Lesson 2 exercise)
+- Exercises Completed: "Map your monolith's coupling surface" (Lesson 1 — debriefed Session 3)
 - Confidence Ratings: (none yet)
 
 ## Session Log
 
 - Session 1 (2026-06-18): Course setup, workspace initialized, diagnostic assessment completed. User's actual knowledge depth calibrated — significantly different from initial prompt claims. Ready to begin Module 01.
 - Session 2 (2026-06-27): Workspace structural overhaul. Created `./assets/lesson.css` (shared stylesheet), `./reference/glossary.html`, flat `./lessons/` directory. Regenerated Lesson 1 with citations, primary source, glossary cross-links, and "ask teacher" reminder. Removed nested phase/module/lessons directory structure.
+- Session 3 (2026-06-29): Lesson 1 exercise debrief. User confirmed all coupling patterns present (shared DB, direct function calls, shared helpers, cross-module breakage). Core domain (Influencers/Campaigns) identified as most tangled. Inspected actual monolith (`Xley-Backend`) — 30 service modules under `service/v1/`, 462KB `influencer_main.js`, 3,600+ line `helper.js`. Created Lesson 2 (Bounded Contexts & DDD) grounded in user's actual codebase. Updated glossary with 8 new DDD terms. Created learning record 0002.

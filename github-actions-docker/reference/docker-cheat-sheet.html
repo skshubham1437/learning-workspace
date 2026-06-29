@@ -56,8 +56,9 @@
     <tr><td>docker volume ls</td><td>List all volumes</td></tr>
     <tr><td>docker volume rm my_data</td><td>Delete a volume (only works if no container is using it)</td></tr>
     <tr><td>docker volume prune</td><td>Delete all volumes not attached to any container. Irreversible.</td></tr>
-    <tr><td>-v my_data:/var/lib/postgresql/data</td><td>Mount named volume to container path</td></tr>
-    <tr><td>-v $(pwd):/app</td><td>Bind mount current directory into container (for dev hot-reload)</td></tr>
+    <tr><td>-v [source]:[destination]</td><td>General syntax: Maps host volume or path (left) to container path (right)</td></tr>
+    <tr><td>-v my_data:/var/lib/postgresql/data</td><td>Mount named volume <code>my_data</code> to container path <code>/var/lib/postgresql/data</code></td></tr>
+    <tr><td>-v $(pwd):/app</td><td>Bind mount current host directory into container <code>/app</code> (for dev hot-reload)</td></tr>
   </table>
 
   <h2>Networks</h2>

@@ -32,6 +32,24 @@
 
   <p>There are two primary ways to persist data or share it between the host and the container. They both use the <code>-v</code> or <code>--mount</code> flag.</p>
 
+  <div class="callout callout-key">
+    <span class="callout-label">Deconstructing the Volume Syntax (<code>-v</code>)</span>
+    <p>The <code>-v</code> (or <code>--volume</code>) flag maps a source directory outside the container to a destination directory inside the container. The syntax is always:</p>
+    <p style="text-align: center; margin: 1rem 0;">
+      <code style="font-size: 1.1rem; padding: 0.4rem 0.8rem; background: var(--border);">-v [source]:[destination]</code>
+    </p>
+    <ul style="margin-left: 1rem;">
+      <li><strong><code>[source]</code> (Left side of the colon):</strong> The data location outside the container.
+        <ul>
+          <li>For a <strong>Named Volume</strong>: This is simply the name of the volume (e.g., <code>my_db_data</code>).</li>
+          <li>For a <strong>Bind Mount</strong>: This is the absolute path to a folder on your host machine (e.g., <code>$(pwd)</code> or <code>/Users/asdasd/project</code>).</li>
+        </ul>
+      </li>
+      <li><strong><code>[destination]</code> (Right side of the colon):</strong> The absolute path <em>inside</em> the container where that data will be mounted (e.g., <code>/var/lib/postgresql/data</code> or <code>/app</code>).</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">⚠️ <strong>Note:</strong> Any data written by the container to the <code>[destination]</code> path will automatically be persisted in the <code>[source]</code> location.</p>
+  </div>
+
   <h3>1. Named Volumes (Best for Databases)</h3>
   <p>A Named Volume is a folder managed entirely by Docker. You give it a name, and Docker stores it somewhere deep in its own managed file system (like <code>/var/lib/docker/volumes/</code> on Linux). You don't care exactly where it is; you just trust Docker to keep it safe across container restarts.</p>
 

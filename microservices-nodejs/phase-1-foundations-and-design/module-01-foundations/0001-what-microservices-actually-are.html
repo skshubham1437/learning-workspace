@@ -6,7 +6,7 @@
   <title>Module 01, Lesson 1 — What Microservices Actually Are</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../assets/lesson.css" />
+  <link rel="stylesheet" href="../../assets/lesson.css" />
 </head>
 <body>
 
@@ -102,7 +102,7 @@
     The three words that matter most are: <em>independently deployable</em>.
     Not "small" — that's a symptom, not the goal.
     Not "single responsibility" — that's a design principle, not a boundary condition.
-    The true test of a <a href="../reference/glossary.html#microservice">microservice</a> is: <strong>can it be deployed without any other service being redeployed?</strong>
+    The true test of a <a href="../../reference/glossary.html#microservice">microservice</a> is: <strong>can it be deployed without any other service being redeployed?</strong>
   </p>
 
   <h3>The architecture spectrum</h3>
@@ -112,9 +112,9 @@
       <thead>
         <tr>
           <th>Property</th>
-          <th><a href="../reference/glossary.html#monolith">Monolith</a></th>
-          <th><a href="../reference/glossary.html#modular-monolith">Modular Monolith</a></th>
-          <th><a href="../reference/glossary.html#microservice">Microservices</a></th>
+          <th><a href="../../reference/glossary.html#monolith">Monolith</a></th>
+          <th><a href="../../reference/glossary.html#modular-monolith">Modular Monolith</a></th>
+          <th><a href="../../reference/glossary.html#microservice">Microservices</a></th>
         </tr>
       </thead>
       <tbody>
@@ -179,7 +179,7 @@
   <div class="callout callout-key">
     <span class="callout-label">The criminally underrated option</span>
     <p>
-      The <strong><a href="../reference/glossary.html#modular-monolith">Modular Monolith</a></strong> gives you most of the code-organisation benefits
+      The <strong><a href="../../reference/glossary.html#modular-monolith">Modular Monolith</a></strong> gives you most of the code-organisation benefits
       of microservices with almost none of the operational cost. If your team is small (&lt;10 engineers),
       you have one deployment pipeline, or you're early in a product's life —
       a Modular Monolith is almost certainly the right call.
@@ -206,10 +206,10 @@
     architecture. Not because it's the best design, but because that's how your humans communicate.
   </p>
 
-  <h3>The <a href="../reference/glossary.html#inverse-conway-maneuver">Inverse Conway Maneuver</a></h3>
+  <h3>The <a href="../../reference/glossary.html#inverse-conway-maneuver">Inverse Conway Maneuver</a></h3>
   <p>
     Amazon's approach (Bezos'
-    "<a href="../reference/glossary.html#two-pizza-team">two-pizza team</a>"
+    "<a href="../../reference/glossary.html#two-pizza-team">two-pizza team</a>"
     mandate)<a class="cite" href="https://gist.github.com/chitchcock/1281611" title="Steve Yegge's Google Platforms Rant, 2011">[4]</a>:
     deliberately <em>restructure the organisation
     first</em> to match the desired architecture, then let the architecture emerge.
@@ -255,7 +255,7 @@
     This wasn't an engineering decision; it was an organisational one.
     The result: Amazon's internal services became the foundation of AWS. EC2, S3, and SQS
     were built for internal use first.
-    <a href="../reference/glossary.html#conways-law">Conway's Law</a>, deliberately applied.
+    <a href="../../reference/glossary.html#conways-law">Conway's Law</a>, deliberately applied.
   </p>
 
   <h3>Netflix — from DVD-by-mail to 700+ services</h3>
@@ -269,7 +269,7 @@
     Netflix Hystrix (circuit breaker library) came directly from these war stories.
   </p>
 
-  <h3>Uber — the <a href="../reference/glossary.html#distributed-monolith">distributed monolith</a> trap</h3>
+  <h3>Uber — the <a href="../../reference/glossary.html#distributed-monolith">distributed monolith</a> trap</h3>
   <p>
     Uber split into 2,000+ microservices by
     2018.<a class="cite" href="https://www.uber.com/blog/microservice-architecture/" title="Uber Engineering Blog, DOMA">[6]</a>
@@ -277,7 +277,7 @@
     too many services created a new kind of tight coupling. A change in one service
     cascaded through 40 dependent services. They'd replaced compile-time coupling with runtime
     coupling — and runtime coupling is harder to detect.
-    Uber responded with <a href="../reference/glossary.html#doma">Domain-Oriented Microservice Architecture (DOMA)</a>: grouping services
+    Uber responded with <a href="../../reference/glossary.html#doma">Domain-Oriented Microservice Architecture (DOMA)</a>: grouping services
     into domains with clear ownership, reducing the blast radius of any single change.
   </p>
 
@@ -298,7 +298,7 @@
   <h2>When microservices are the wrong answer</h2>
 
   <div class="callout callout-danger">
-    <span class="callout-label">The <a href="../reference/glossary.html#microservice-premium" style="color: inherit;">Microservice Premium</a> — Martin Fowler</span>
+    <span class="callout-label">The <a href="../../reference/glossary.html#microservice-premium" style="color: inherit;">Microservice Premium</a> — Martin Fowler</span>
     <p>
       The upfront cost you pay with
       microservices<a class="cite" href="https://martinfowler.com/bliki/MicroservicePremium.html" title="Fowler, Microservice Premium">[8]</a>:
@@ -314,7 +314,7 @@
     <li>Your team is fewer than 10–15 engineers (coordination overhead exceeds autonomy gains)</li>
     <li>You haven't built the product yet — you don't know where the domain boundaries are</li>
     <li>You lack strong DevOps / SRE capability (microservices multiply operational complexity)</li>
-    <li>Your services would share a database anyway — that's a <a href="../reference/glossary.html#distributed-monolith">distributed monolith</a>, not microservices</li>
+    <li>Your services would share a database anyway — that's a <a href="../../reference/glossary.html#distributed-monolith">distributed monolith</a>, not microservices</li>
     <li>You can't articulate which team owns which service — no org alignment means no benefit</li>
   </ul>
 
@@ -445,7 +445,7 @@
     <details>
       <summary>Reveal answer</summary>
       <p>
-        <a href="../reference/glossary.html#independent-deployability">Independent deployability</a>: can it be deployed without any other service being redeployed?
+        <a href="../../reference/glossary.html#independent-deployability">Independent deployability</a>: can it be deployed without any other service being redeployed?
         Size and responsibility are design guidance. This is the architectural boundary condition.
       </p>
     </details>
@@ -457,7 +457,7 @@
     <details>
       <summary>Reveal answer</summary>
       <p>
-        "<a href="../reference/glossary.html#conways-law">Any organisation that designs a system will produce a design whose structure is a copy of the organisation's
+        "<a href="../../reference/glossary.html#conways-law">Any organisation that designs a system will produce a design whose structure is a copy of the organisation's
         communication structure.</a>" Example: Amazon restructured into two-pizza teams before building service APIs —
         the org change enabled the architectural change, not the other way around.
       </p>
@@ -470,7 +470,7 @@
     <details>
       <summary>Reveal answer</summary>
       <p>
-        A <a href="../reference/glossary.html#distributed-monolith">distributed monolith</a> is a microservices deployment where services are still tightly coupled —
+        A <a href="../../reference/glossary.html#distributed-monolith">distributed monolith</a> is a microservices deployment where services are still tightly coupled —
         typically through a shared database or deep synchronous call chains. It's worse because you have all
         the operational complexity of distributed systems (network failures, partial failures, tracing) without
         any of the autonomy benefits.
@@ -485,7 +485,7 @@
       <summary>Reveal answer</summary>
       <p>
         The upfront cost of microservices complexity. It pays off only when the productivity gains from
-        team independence — <a href="../reference/glossary.html#independent-deployability">independent deployability</a> and scaling — outweigh the distributed systems overhead.
+        team independence — <a href="../../reference/glossary.html#independent-deployability">independent deployability</a> and scaling — outweigh the distributed systems overhead.
         Most teams never reach this crossover. Fowler argues most should start with a monolith.
       </p>
     </details>
@@ -511,7 +511,7 @@
       <summary>Reveal answer</summary>
       <p>
         Changes in one service cascaded through 40 dependent services — runtime coupling replaced compile-time coupling,
-        which is harder to detect. Recovery: <a href="../reference/glossary.html#doma">Domain-Oriented Microservice Architecture (DOMA)</a> — grouping services
+        which is harder to detect. Recovery: <a href="../../reference/glossary.html#doma">Domain-Oriented Microservice Architecture (DOMA)</a> — grouping services
         into domains with clear ownership, reducing blast radius.
       </p>
     </details>
@@ -523,7 +523,7 @@
     <details>
       <summary>Reveal answer</summary>
       <p>
-        In a <a href="../reference/glossary.html#modular-monolith">Modular Monolith</a>, all calls between modules are in-process function calls: they cannot fail due to network issues,
+        In a <a href="../../reference/glossary.html#modular-monolith">Modular Monolith</a>, all calls between modules are in-process function calls: they cannot fail due to network issues,
         they have no latency, and they don't need retry logic. In microservices, every call crosses the network:
         it can fail, timeout, or return partial data. This single difference drives most of the distributed systems complexity.
       </p>
@@ -539,7 +539,7 @@
         A 2002 internal directive requiring every Amazon team to expose data/functionality only via service APIs —
         no direct function calls, no shared databases. Non-compliance meant firing. It enabled AWS: the internal
         services built to serve Amazon.com (compute, storage, queuing) became products sold externally.
-        Organisational mandate → architectural outcome. (<a href="../reference/glossary.html#inverse-conway-maneuver">Inverse Conway Maneuver</a>)
+        Organisational mandate → architectural outcome. (<a href="../../reference/glossary.html#inverse-conway-maneuver">Inverse Conway Maneuver</a>)
       </p>
     </details>
   </div>
@@ -610,13 +610,13 @@
   <div class="lesson-footer">
     <p>
       <strong>Lesson 1 of 3 complete.</strong> You now have the mental model:
-      microservices are about <em><a href="../reference/glossary.html#independent-deployability">independent deployability</a></em> — everything else flows from that.
+      microservices are about <em><a href="../../reference/glossary.html#independent-deployability">independent deployability</a></em> — everything else flows from that.
     </p>
     <p style="margin-top: 0.5rem;">
       Complete the exercise above, then ask for <strong>Lesson 2: Bounded Contexts &amp; DDD</strong>.
     </p>
     <p style="margin-top: 1rem;">
-      📚 <a href="../reference/glossary.html">Glossary</a>
+      📚 <a href="../../reference/glossary.html">Glossary</a>
     </p>
   </div>
 

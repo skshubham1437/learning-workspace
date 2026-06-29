@@ -79,7 +79,7 @@
       All function calls are in-process — they cannot fail due to network issues.
     </p>
     <p class="term-avoid">Avoid: using "monolith" as a pejorative. A well-structured monolith is a legitimate architectural choice.</p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="modular-monolith">
@@ -90,7 +90,7 @@
       Still a single deployment unit.
     </p>
     <p class="term-avoid">Avoid: conflating with microservices — the key difference is that all calls remain in-process.</p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="microservice">
@@ -100,7 +100,7 @@
       The defining property is <strong>independent deployability</strong> — not size, not "single responsibility."
     </p>
     <p class="term-avoid">Avoid: defining by size ("small service"). The boundary condition is deployability, not lines of code.</p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="distributed-monolith">
@@ -110,7 +110,7 @@
       Worse than an actual monolith: you get all the operational complexity of distributed systems without any of the autonomy benefits.
     </p>
     <p class="term-avoid">Avoid: "loosely coupled microservices" when describing systems with shared databases.</p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
 
@@ -123,7 +123,7 @@
       The ability to deploy a service without requiring any other service to be redeployed simultaneously.
       This is the true test of a microservice — the architectural boundary condition from which all other properties flow.
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="conways-law">
@@ -132,7 +132,7 @@
       "Any organisation that designs a system will produce a design whose structure is a copy of the organisation's communication structure." — Melvin Conway, 1968.
       In practice: your team structure becomes your system architecture, whether you plan it or not.
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="inverse-conway-maneuver">
@@ -141,7 +141,7 @@
       Deliberately restructuring the organisation first to match the desired system architecture, then letting the architecture emerge naturally.
       Example: Amazon's two-pizza team mandate restructured the org before building service APIs.
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="microservice-premium">
@@ -151,7 +151,7 @@
       You only come out ahead when the productivity benefits of team independence outweigh this cost.
       Most teams never reach the scale where this crossover happens. — Martin Fowler
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
 
@@ -165,7 +165,7 @@
       reducing the blast radius of any single change. Addresses the "too many services" problem by adding
       an organisational layer above individual services.
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
   </div>
 
   <div class="term" id="two-pizza-team">
@@ -174,7 +174,96 @@
       Amazon's rule of thumb: a team should be small enough to be fed by two pizzas (~6–8 people).
       Part of the Inverse Conway Maneuver — small autonomous teams naturally produce small autonomous services.
     </p>
-    <p class="term-lesson">Introduced: <a href="../lessons/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html">Lesson 01</a></p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Domain-Driven Design (Strategic)</div>
+
+  <div class="term" id="domain-driven-design">
+    <div class="term-name">Domain-Driven Design (DDD)</div>
+    <p class="term-def">
+      A philosophy and set of techniques for aligning complex software with the business domain it serves — Eric Evans, 2003.
+      Strategic Design (the half relevant to microservice boundaries) divides a system into Bounded Contexts.
+      Tactical Design (Entities, Aggregates, Repositories) structures code inside a single context.
+    </p>
+    <p class="term-avoid">Avoid: treating DDD as an architecture pattern or framework. It's a way of thinking about business boundaries.</p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="bounded-context">
+    <div class="term-name">Bounded Context</div>
+    <p class="term-def">
+      A conceptual boundary within which a particular domain model and its Ubiquitous Language are defined and consistent.
+      Inside a Bounded Context, every term has one meaning, the model is internally consistent, and the team can change
+      it without coordinating with other contexts. Not the same as a microservice — a context is conceptual, a microservice is a deployment unit.
+    </p>
+    <p class="term-avoid">Avoid: equating 1 Bounded Context = 1 microservice. The mapping is often 1:1, but not always.</p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="ubiquitous-language">
+    <div class="term-name">Ubiquitous Language</div>
+    <p class="term-def">
+      A shared, precise vocabulary developed collaboratively by developers and domain experts within a Bounded Context.
+      Every term has exactly one meaning, and that meaning is used in conversations, documentation, and code.
+      When the same word means different things in different parts of the system, you've found a context boundary.
+    </p>
+    <p class="term-avoid">Avoid: using different terminology in code vs business conversations. The whole point is they match.</p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="context-mapping">
+    <div class="term-name">Context Mapping</div>
+    <p class="term-def">
+      A visual or textual representation of how different Bounded Contexts interact and relate to one another.
+      DDD defines several relationship patterns: Partnership, Shared Kernel, Customer–Supplier, Conformist,
+      and Anti-Corruption Layer. Each pattern captures the power balance and integration approach between contexts.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="anti-corruption-layer">
+    <div class="term-name">Anti-Corruption Layer (ACL)</div>
+    <p class="term-def">
+      A translation layer that converts one Bounded Context's model into another's language, preventing model leakage.
+      Acts as an adapter that absorbs upstream model changes so the downstream context's internal model remains clean.
+      Essential when integrating with legacy systems, third-party APIs, or any context whose model you don't control.
+    </p>
+    <p class="term-avoid">Avoid: directly importing another context's data structures. That's how model leakage happens.</p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section-heading">Subdomain Classification</div>
+
+  <div class="term" id="core-domain">
+    <div class="term-name">Core Domain</div>
+    <p class="term-def">
+      The part of the business that is unique, strategic, and provides competitive advantage.
+      This is where the highest engineering investment should go. If you had to explain your product in one sentence,
+      it describes the Core Domain.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="supporting-subdomain">
+    <div class="term-name">Supporting Subdomain</div>
+    <p class="term-def">
+      A subdomain necessary for the Core Domain to function, but not the unique value proposition.
+      Custom-built but not strategic. Keep investment lean — good enough is good enough.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
+  </div>
+
+  <div class="term" id="generic-subdomain">
+    <div class="term-name">Generic Subdomain</div>
+    <p class="term-def">
+      A solved problem not specific to your business. Auth, notifications, payment processing, email delivery.
+      Prefer buying, using SaaS, or open-source over building custom. Every hour spent here is an hour not spent on Core Domain.
+    </p>
+    <p class="term-lesson">Introduced: <a href="../phase-1-foundations-and-design/0002-bounded-contexts-and-ddd.html">Lesson 02</a></p>
   </div>
 
 
@@ -185,9 +274,6 @@
     The following terms will be defined as they are introduced in future lessons:
   </p>
   <ul style="font-family: var(--sans); font-size: 0.88rem; color: var(--muted);">
-    <li>Bounded Context (Module 01, Lesson 2)</li>
-    <li>Domain-Driven Design (Module 01, Lesson 2)</li>
-    <li>Ubiquitous Language (Module 01, Lesson 2)</li>
     <li>Service Boundary (Module 02)</li>
     <li>Database-per-Service (Module 04)</li>
     <li>Saga Pattern (Module 05)</li>
