@@ -1,0 +1,268 @@
+/* ── ide.css ──────────────────────────────────
+   Interactive In-Browser JS IDE & Test Runner
+   Shared styling for all coding challenges.
+   ─────────────────────────────────────────── */
+
+.ide-container {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background-color: white;
+  margin: 2.5rem 0;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  font-family: var(--sans);
+}
+
+/* Dark mode overrides when iframe inherits dark theme */
+[data-theme="dark"] .ide-container,
+body[style*="background-color: rgb(15, 17, 23)"] .ide-container,
+body[style*="#0f1117"] .ide-container {
+  background-color: #1e212b !important;
+  border-color: #323746 !important;
+}
+
+/* ── Toolbar / Header ─────────────────────── */
+.ide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ide-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ide-badge {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  background-color: var(--accent-light);
+  color: var(--accent);
+  border-radius: 4px;
+}
+
+.ide-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ide-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.ide-run-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.ide-run-btn:active {
+  transform: translateY(0);
+}
+
+.ide-run-btn:disabled {
+  background-color: var(--muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Editor Area ──────────────────────────── */
+.ide-editor-wrap {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  min-height: 160px;
+}
+
+/* Fallback Textarea */
+.ide-textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 1rem 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--fg);
+  background-color: var(--code-bg);
+  border: none;
+  resize: vertical;
+  outline: none;
+}
+
+/* CodeMirror customizations */
+.CodeMirror {
+  font-family: var(--mono) !important;
+  font-size: 0.9rem !important;
+  height: auto !important;
+  min-height: 160px;
+  background-color: var(--code-bg) !important;
+  color: var(--fg) !important;
+}
+
+.CodeMirror-gutters {
+  background-color: var(--bg) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+.CodeMirror-linenumber {
+  color: var(--muted) !important;
+}
+
+/* ── Output / Console Panel ───────────────── */
+.ide-output-panel {
+  padding: 1.25rem;
+  background-color: var(--bg);
+}
+
+.ide-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.ide-tab-btn {
+  background: none;
+  border: none;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  position: relative;
+}
+
+.ide-tab-btn.active {
+  color: var(--accent);
+}
+
+.ide-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.6rem;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--accent);
+}
+
+.ide-tab-content {
+  display: none;
+}
+
+.ide-tab-content.active {
+  display: block;
+}
+
+/* Test Cases UI */
+.test-suite-summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
+.test-suite-summary.success { color: #047857; }
+.test-suite-summary.error { color: #b91c1c; }
+
+.test-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.test-case-card {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background-color: white;
+  font-size: 0.85rem;
+}
+
+.test-case-card.pass {
+  border-left: 4px solid #10b981;
+  background-color: var(--success-bg);
+}
+
+.test-case-card.fail {
+  border-left: 4px solid #ef4444;
+  background-color: var(--danger-bg);
+}
+
+.test-case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.test-status-badge {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.test-case-card.pass .test-status-badge {
+  background-color: #a7f3d0;
+  color: #065f46;
+}
+
+.test-case-card.fail .test-status-badge {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.test-details {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.test-details div {
+  margin-top: 0.2rem;
+}
+
+/* Console Logs Box */
+.console-logs-box {
+  background-color: #1e212b;
+  color: #e5e7eb;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 1rem;
+  border-radius: 6px;
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.console-empty {
+  color: #6b7280;
+  font-style: italic;
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 01 - Read a React Feature From the Outside In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;650&amp;family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <script defer src="../assets/quiz.js"></script>
+</head>
+<body>
+  <main>
+    <div class="lesson-number">Lesson 01</div>
+    <h1>Read a React Feature From the Outside In</h1>
+    <p class="subtitle">Your first production-reading skill: trace what renders, what changes, and who owns the change.</p>
+
+    <p>
+      React apps become readable when you stop trying to understand every line at once. The official React docs recommend breaking UI into a component hierarchy, finding the minimal changing state, and placing that state where all dependent components can reach it. That is our first code-reading tool.
+    </p>
+
+    <p>
+      For now, use this small feature as a stand-in for the missing `xley-frontend` path. The same reading move will work when we inspect the real project.
+    </p>
+
+    <pre><code>function OrdersPage({ orders }) {
+  const [searchText, setSearchText] = useState("");
+  const [status, setStatus] = useState("all");
+
+  const visibleOrders = orders.filter((order) => {
+    const matchesText = order.customer.includes(searchText);
+    const matchesStatus = status === "all" || order.status === status;
+    return matchesText &amp;&amp; matchesStatus;
+  });
+
+  return (
+    &lt;&gt;
+      &lt;OrderFilters
+        searchText={searchText}
+        status={status}
+        onSearchTextChange={setSearchText}
+        onStatusChange={setStatus}
+      /&gt;
+      &lt;OrderList orders={visibleOrders} /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+    <h2>The outside-in pass</h2>
+    <div class="grid">
+      <section class="tile">
+        <b>1. What renders?</b>
+        <p>`OrdersPage` renders `OrderFilters` and `OrderList`. That gives you the feature boundary.</p>
+      </section>
+      <section class="tile">
+        <b>2. What changes?</b>
+        <p>`searchText` and `status` change over time. `visibleOrders` is recalculated from them.</p>
+      </section>
+      <section class="tile">
+        <b>3. Who owns it?</b>
+        <p>`OrdersPage` owns the filter state because both filters and list need it.</p>
+      </section>
+    </div>
+
+    <div class="callout">
+      <strong>The important distinction:</strong> `visibleOrders` feels like data, but it is not state. It is derived during render from `orders`, `searchText`, and `status`. React's docs call this the search for the minimal representation of UI state.
+    </div>
+
+    <h2>Why this matters</h2>
+    <p>
+      Beginners often add state for anything that appears on screen. Production React code asks a sharper question: can this value be computed from existing props or state? If yes, compute it during render first. If no, store it in state, a reducer, context, the URL, a server-state cache, or a global store.
+    </p>
+
+    <p>
+      Later, this same question decides whether you need a package. API data often belongs in TanStack Query. Complex app-wide client state may belong in Redux Toolkit. But filtered arrays like `visibleOrders` usually do not need either.
+    </p>
+
+    <section class="practice" data-quiz data-correct-feedback="Correct. The page owns it because both children depend on the same changing values." data-wrong-feedback="Close, but derived or child-only ownership would make the list and controls drift apart.">
+      <h2>Retrieval practice</h2>
+      <p>
+        In the code above, where should `searchText` and `status` live?
+      </p>
+      <div class="quiz-options">
+        <button class="quiz-btn" type="button" data-answer="wrong" aria-pressed="false">Child owns derived list</button>
+        <button class="quiz-btn" type="button" data-answer="correct" aria-pressed="false">Parent owns changing value</button>
+        <button class="quiz-btn" type="button" data-answer="wrong" aria-pressed="false">Server owns button clicks</button>
+      </div>
+      <p class="quiz-feedback" data-feedback aria-live="polite"></p>
+    </section>
+
+    <section class="practice">
+      <h2>Your five-minute drill</h2>
+      <ol>
+        <li>Open any React page component you already understand a little.</li>
+        <li>Write down its immediate child components.</li>
+        <li>Circle every `useState`, reducer, query hook, router hook, and custom hook.</li>
+        <li>Pick one displayed value and trace whether it is original state or derived data.</li>
+        <li>Ask me about the first confusing value you find.</li>
+      </ol>
+    </section>
+
+    <h2>Primary source</h2>
+    <p>
+      Read <a href="https://react.dev/learn/thinking-in-react">Thinking in React</a>, especially the parts about component hierarchy, minimal state, and where state should live. Keep the <a href="../reference/0001-react-code-reading-map.html">React Code Reading Map</a> open beside it.
+    </p>
+
+    <p class="footnote">
+      Also useful soon: <a href="https://react.dev/learn/state-as-a-snapshot">State as a Snapshot</a> and <a href="https://react.dev/learn/you-might-not-need-an-effect">You Might Not Need an Effect</a>. If anything in this lesson feels fuzzy, ask me to unpack it with a real file.
+    </p>
+  </main>
+</body>
+</html>

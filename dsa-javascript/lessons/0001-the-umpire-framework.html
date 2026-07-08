@@ -6,181 +6,7 @@
   <title>Lesson 01 — The UMPIRE Framework</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #faf9f6;
-      --fg: #1a1a1a;
-      --accent: #2563eb;
-      --accent-light: #dbeafe;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --code-bg: #f3f4f6;
-      --callout-bg: #fffbeb;
-      --callout-border: #f59e0b;
-      --success-bg: #ecfdf5;
-      --success-border: #10b981;
-      --danger-bg: #fef2f2;
-      --danger-border: #ef4444;
-      --serif: 'Source Serif 4', Georgia, serif;
-      --sans: 'Inter', system-ui, sans-serif;
-      --mono: 'JetBrains Mono', 'Fira Code', monospace;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: var(--serif);
-      font-size: 1.125rem;
-      line-height: 1.75;
-      color: var(--fg);
-      background: var(--bg);
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem 6rem;
-    }
-
-    /* ── Header ─────────────────────────────── */
-    .lesson-number {
-      font-family: var(--sans);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.25rem;
-    }
-
-    h1 {
-      font-family: var(--serif);
-      font-size: 2.25rem;
-      font-weight: 600;
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
-    }
-
-    .subtitle {
-      font-family: var(--sans);
-      font-size: 1rem;
-      color: var(--muted);
-      margin-bottom: 2.5rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    /* ── Headings ───────────────────────────── */
-    h2 {
-      font-family: var(--serif);
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-top: 3rem;
-      margin-bottom: 1rem;
-      color: var(--fg);
-    }
-
-    h3 {
-      font-family: var(--sans);
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      margin-top: 2rem;
-      margin-bottom: 0.75rem;
-      color: var(--fg);
-    }
-
-    /* ── Body text ──────────────────────────── */
-    p { margin-bottom: 1.25rem; }
-    strong { font-weight: 600; }
-    em { font-style: italic; }
-    ul, ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
-    li { margin-bottom: 0.5rem; }
-
-    /* ── Callouts ───────────────────────────── */
-    .callout {
-      padding: 1.25rem 1.5rem;
-      border-radius: 8px;
-      margin: 1.5rem 0;
-      border-left: 4px solid;
-    }
-    .callout p:last-child { margin-bottom: 0; }
-    .callout-analogy { background: var(--callout-bg); border-color: var(--callout-border); }
-    .callout-key { background: var(--accent-light); border-color: var(--accent); }
-    .callout-success { background: var(--success-bg); border-color: var(--success-border); }
-    .callout-danger { background: var(--danger-bg); border-color: var(--danger-border); }
-    
-    .callout-label {
-      font-family: var(--sans);
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-    .callout-analogy .callout-label { color: #92400e; }
-    .callout-key .callout-label { color: var(--accent); }
-    .callout-success .callout-label { color: #047857; }
-    .callout-danger .callout-label { color: #b91c1c; }
-
-    /* ── Step-by-Step ───────────────────────── */
-    .step-box {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      background: white;
-      position: relative;
-    }
-    .step-letter {
-      position: absolute;
-      top: -15px;
-      left: -15px;
-      width: 40px;
-      height: 40px;
-      background: var(--accent);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--sans);
-      font-weight: 600;
-      font-size: 1.25rem;
-      border: 4px solid var(--bg);
-    }
-    .step-title {
-      font-family: var(--sans);
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      color: var(--fg);
-    }
-
-    /* ── Retrieval Practice ─────────────────── */
-    .retrieval {
-      background: white;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2.5rem 0;
-    }
-    .retrieval h3 { margin-top: 0; font-family: var(--sans); color: var(--accent); }
-    .retrieval-question { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.75rem; font-style: italic; }
-    details { margin-bottom: 1rem; }
-    summary { font-family: var(--sans); font-size: 0.85rem; font-weight: 500; color: var(--accent); cursor: pointer; padding: 0.35rem 0; }
-    summary:hover { text-decoration: underline; }
-    details[open] summary { margin-bottom: 0.5rem; }
-    details p { font-size: 0.95rem; color: var(--muted); padding-left: 1rem; border-left: 2px solid var(--accent-light); }
-
-    /* ── Footer ─────────────────────────────── */
-    .lesson-footer {
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--border);
-      font-family: var(--sans);
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-  </style>
+  <link rel="stylesheet" href="../assets/lesson.css">
 </head>
 <body>
 
@@ -309,6 +135,14 @@
       <p>Because it's much easier to fix broken logic in plain English than it is to untangle broken JavaScript. If the plan is solid, the implementation is just typing.</p>
     </details>
   </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Practice Questions</h2>
+  <p>Put the UMPIRE framework into practice with these recommended questions. Don't write code until you've completed the <strong>Plan</strong> step!</p>
+  <ul>
+    <li><a href="https://leetcode.com/problems/two-sum/" target="_blank">LeetCode 1: Two Sum</a> (A classic problem perfect for practicing the UMPIRE method)</li>
+    <li><a href="https://leetcode.com/problems/fizz-buzz/" target="_blank">LeetCode 412: Fizz Buzz</a> (Focus on edge cases and clear logic)</li>
+  </ul>
 
   <!-- ───────────────────────────────────── -->
   <div class="lesson-footer">

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 03 — JavaScript Arrays and Strings: The 80/20 Interview Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <link rel="stylesheet" href="../assets/ide.css">
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 03</div>
+  <h1>JavaScript Arrays and Strings: The 80/20 Interview Guide</h1>
+  <p class="subtitle">Master the essential built-in methods and avoid the hidden O(n²) performance traps that sink technical interviews.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>You Don't Need to Memorize Everything</h2>
+  
+  <p>JavaScript has over 40 built-in array methods and dozens of string methods. Trying to memorize all of them before a coding interview is a waste of working memory.</p>
+
+  <p>In real-world coding interviews, <strong>80% of problems</strong> rely on just a handful of core methods. More importantly, interviewers don't just care <em>if</em> you know a method—they care if you know its <a href="0002-big-o-notation.html">Big O time and space complexity</a>.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>1. Adding & Removing: The Front vs. The Back</h2>
+
+  <p>The most important performance distinction in JavaScript arrays is where you insert or remove items.</p>
+
+  <div class="step-box" style="margin-top: 2rem;">
+    <div class="step-letter">✓</div>
+    <div class="step-title">The Back: push() and pop() — O(1) Constant Time</div>
+    <p>Adding or removing an element from the end of an array is instantaneous. No other elements are affected.</p>
+    <pre><code>const stack = [10, 20, 30];
+stack.push(40); // [10, 20, 30, 40] -> O(1) time
+stack.pop();    // [10, 20, 30]     -> O(1) time</code></pre>
+  </div>
+
+  <div class="step-box" style="border-color: var(--danger-border);">
+    <div class="step-letter" style="background: var(--danger-border);">⚠️</div>
+    <div class="step-title">The Front: unshift() and shift() — O(n) Linear Time</div>
+    <p>Adding or removing from the beginning index (<code>0</code>) forces the JavaScript engine to re-index every single remaining item in memory!</p>
+    <pre><code>const queue = [10, 20, 30];
+queue.shift(); // Removes 10, but shifts 20 to index 0, and 30 to index 1 -> O(n) time!</code></pre>
+  </div>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">Interview Trap</span>
+    <p>Never use <code>array.shift()</code> or <code>array.unshift()</code> inside a loop! A loop that runs <code>n</code> times calling an <code>O(n)</code> shift operation degrades your algorithm into sluggish <strong><code>O(n²)</code> quadratic time</strong>.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>2. Slicing, Splitting, and Joining</h2>
+
+  <p>When manipulating strings and arrays, be mindful of when you are creating new copies in memory (Space Complexity):</p>
+
+  <ul>
+    <li><code>arr.slice(start, end)</code> — Returns a shallow copy of a portion of an array. <strong>Time: <code>O(k)</code>, Space: <code>O(k)</code></strong> (where <code>k</code> is the size of the slice).</li>
+    <li><code>arr.splice(start, deleteCount, ...items)</code> — Modifies an array <em>in-place</em> by removing or replacing elements. <strong>Time: <code>O(n)</code>, Space: <code>O(1)</code></strong>.</li>
+    <li><code>str.split('')</code> & <code>arr.join('')</code> — Converts strings to arrays and vice versa. <strong>Time: <code>O(n)</code>, Space: <code>O(n)</code></strong>.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>3. The Hidden O(n²) Trap: indexOf and includes</h2>
+
+  <p>Many candidates write code like this and assume it runs in <code>O(n)</code> linear time because there is only one visible <code>for</code> loop:</p>
+
+  <pre><code>function findCommonElements(arr1, arr2) {
+  const common = [];
+  for (let item of arr1) {          // Loop runs O(n) times
+    if (arr2.includes(item)) {      // ⚠️ HIDDEN O(m) LINEAR SCAN!
+      common.push(item);
+    }
+  }
+  return common;
+}</code></pre>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Under the Hood</span>
+    <p>Methods like <code>.includes()</code>, <code>.indexOf()</code>, and <code>.find()</code> do not magically jump to the answer. They perform a linear scan from index 0 to the end. Calling them inside a loop multiplies your complexity: <code>O(n × m)</code> (or <strong><code>O(n²)</code></strong> if arrays are equal size). In Phase 3, we will learn how to fix this using Hash Sets!</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Interactive Retrieval Practice</h2>
+
+  <div class="retrieval">
+    <h3>Test Your Understanding</h3>
+    <p class="retrieval-question">Why is calling array.shift() inside a while loop considered a dangerous performance trap in technical interviews?</p>
+    
+    <div class="quiz-options" id="quiz-1">
+      <button class="quiz-btn" onclick="checkAnswer(1, this, false)">A) Because shift() creates a duplicate copy of the entire array in RAM memory</button>
+      <button class="quiz-btn" onclick="checkAnswer(1, this, true)">B) Because shift() is O(n) as it re-indexes every item, turning the loop O(n²)</button>
+      <button class="quiz-btn" onclick="checkAnswer(1, this, false)">C) Because shift() only works on strings and throws syntax errors on arrays</button>
+    </div>
+    <div class="quiz-feedback" id="feedback-1">
+      <strong>Correct!</strong> Removing from index <code>0</code> forces every subsequent item at index <code>1, 2, 3...</code> to shift left in memory. Doing an <code>O(n)</code> re-indexing operation inside an <code>n</code>-iteration loop results in <code>O(n²)</code> quadratic time complexity.
+    </div>
+
+    <hr style="border:0; border-top:1px solid var(--border); margin: 2rem 0;" />
+
+    <p class="retrieval-question">Analyze the code below. What is its true worst-case time complexity?</p>
+    
+    <pre><code>function containsVowel(words) {
+  const vowels = ['a', 'e', 'i', 'o', 'u'];
+  for (let word of words) {
+    if (vowels.includes(word[0])) { return true; }
+  }
+  return false;
+}</code></pre>
+
+    <div class="quiz-options" id="quiz-2">
+      <button class="quiz-btn" onclick="checkAnswer(2, this, true)">A) O(n) Linear Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(2, this, false)">B) O(n²) Quadratic Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(2, this, false)">C) O(1) Constant Time Complexity</button>
+    </div>
+    <div class="quiz-feedback" id="feedback-2">
+      <strong>Correct!</strong> This is a tricky distinction! Even though <code>vowels.includes()</code> is a linear scan inside a loop, the <code>vowels</code> array has a <strong>fixed constant size of 5</strong>. Scanning 5 items is <code>O(5)</code>, which simplifies to <code>O(1)</code> constant time! Thus, the overall loop running over <code>n</code> words is simply <strong><code>O(n)</code></strong> linear time!
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Interactive Coding Challenge: The O(n) Palindrome</h2>
+  <p>Practice using index lookups without creating a reverse copy in memory (which would cost <code>O(n)</code> space). Write a function that returns <code>true</code> if a string is a palindrome, using only <code>O(1)</code> constant auxiliary space!</p>
+
+  <div class="interactive-ide" 
+       data-title="Challenge: isPalindrome(str) in O(1) space"
+       data-function-name="isPalindrome"
+       data-starter-code="function isPalindrome(str) {&#10;  // Hint: Use two index pointers from front and back&#10;  // Write your code here&#10;}">
+    <script type="application/json" class="test-cases">
+      [
+        { "input": ["racecar"], "expected": true, "desc": "Standard odd-length palindrome" },
+        { "input": ["abba"], "expected": true, "desc": "Even-length palindrome" },
+        { "input": ["javascript"], "expected": false, "desc": "Non-palindrome word" },
+        { "input": ["a"], "expected": true, "desc": "Single character edge case" },
+        { "input": [""], "expected": true, "desc": "Empty string edge case" }
+      ]
+    </script>
+  </div>
+
+  <details style="margin-top: 1.5rem; cursor: pointer;">
+    <summary style="font-weight: 500; color: var(--accent);">Reveal Solution & Explanation</summary>
+    <div style="margin-top: 1rem; padding: 1rem; border-left: 3px solid var(--accent); background: var(--surface);">
+      <pre><code>function isPalindrome(str) {
+  let left = 0;
+  let right = str.length - 1;
+  
+  while (left < right) {
+    if (str[left] !== str[right]) return false;
+    left++;
+    right--;
+  }
+  return true;
+}</code></pre>
+      <p style="margin-top: 1rem;"><strong>Explanation:</strong> By using two pointers (one at the beginning and one at the end), we can check if characters match while moving inwards. This completely avoids allocating a new reversed string in memory, keeping our space complexity at <strong>O(1) constant space</strong>.</p>
+    </div>
+  </details>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Primary Source & Citation</h2>
+  <p>To master built-in JavaScript methods before tackling algorithmic patterns, bookmark these authoritative references:</p>
+  <ul>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank">MDN Web Docs: JavaScript Array Reference</a> — Canonical reference for array methods and mutability.</li>
+    <li><a href="https://www.educative.io/courses/grokking-the-coding-interview" target="_blank">Educative: Grokking the Coding Interview Patterns</a> — Learn how pattern recognition replaces brute force methods.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Practice Questions</h2>
+  <p>Apply your knowledge of array methods, string manipulation, and the two-pointer technique to these interview favorites:</p>
+  <ul>
+    <li><a href="https://leetcode.com/problems/valid-palindrome/" target="_blank">LeetCode 125: Valid Palindrome</a> (Expand on the interactive challenge above)</li>
+    <li><a href="https://leetcode.com/problems/valid-anagram/" target="_blank">LeetCode 242: Valid Anagram</a> (Be mindful of O(n log n) sorting vs O(n) Hash Map)</li>
+    <li><a href="https://leetcode.com/problems/reverse-string/" target="_blank">LeetCode 344: Reverse String</a> (Practice modifying arrays in-place with O(1) space)</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p>💬 <strong>Teacher's Reminder:</strong> I am your AI coding teacher! If you are ever unsure whether a built-in method creates a copy in memory ($O(n)$ space) or modifies in-place ($O(1)$ space), ask me a follow-up question right now in the chat!</p>
+    <p style="margin-top:0.5rem;"><a href="0002-big-o-notation.html">← Previous: Lesson 02 (Big O Notation)</a> · <a href="../GLOSSARY.md">View Glossary</a></p>
+  </div>
+
+  <script>
+    function checkAnswer(quizId, btn, isCorrect) {
+      const parent = document.getElementById('quiz-' + quizId);
+      const feedback = document.getElementById('feedback-' + quizId);
+      
+      parent.querySelectorAll('.quiz-btn').forEach(b => {
+        b.classList.remove('correct', 'wrong');
+      });
+
+      if (isCorrect) {
+        btn.classList.add('correct');
+        feedback.className = 'quiz-feedback correct show';
+      } else {
+        btn.classList.add('wrong');
+        feedback.className = 'quiz-feedback wrong show';
+        feedback.innerHTML = '<strong>Not quite!</strong> Check where the elements are being shifted in memory or check if the array being scanned has a fixed constant length.';
+      }
+    }
+  </script>
+  <script src="../assets/ide.js"></script>
+</body>
+</html>

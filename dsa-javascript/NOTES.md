@@ -10,8 +10,8 @@
 
 ### Phase 1: How to Think (Frameworks & Complexity)
 1. ✅ Lesson 01: The UMPIRE Framework — What to do when your mind goes blank.
-2. Lesson 02: Big O Notation — How to talk about time and space complexity without math degrees.
-3. Lesson 03: JavaScript Arrays and Strings — Built-in methods you actually need for interviews.
+2. ✅ Lesson 02: Big O Notation — How to talk about time and space complexity without math degrees.
+3. 🟢 Lesson 03: JavaScript Arrays and Strings — Built-in methods you actually need for interviews.
 
 ### Phase 2: The Core Patterns (The 80/20 Rule)
 4. Lesson 04: Pattern: Two Pointers (e.g., Valid Palindrome, Two Sum II).

@@ -3,7 +3,7 @@
 ## Modules
 
 ### Module 03 — Communication Patterns
-Synchronous: REST vs GraphQL vs gRPC. Asynchronous: Event-driven architecture, message queues (RabbitMQ, Kafka, Redis Streams, NATS).
+Synchronous: REST vs GraphQL vs gRPC. Asynchronous: Event-driven architecture, message queues (RabbitMQ, Kafka, Redis Streams, NATS). Message delivery semantics (at-most-once, at-least-once, exactly-once, effectively-once). Ack/Nack, prefetch, message durability.
 
 ### Module 04 — Data Management
 Database-per-service. Shared database anti-pattern. CQRS. Event Sourcing. Materialized Views. Data replication. Eventual consistency.

@@ -8,7 +8,27 @@ const courseData = [
         "lessons": [
             {
                 "title": "Lesson 01 — The UMPIRE Framework",
-                "path": "../dsa-javascript/lessons/0001-the-umpire-framework.html"
+                "slug": "0001-the-umpire-framework",
+                "path": "../dsa-javascript/lessons/0001-the-umpire-framework.html",
+                "section": "Lessons",
+                "duration": "5 min read",
+                "description": "What to do when you look at a LeetCode problem and your mind goes blank."
+            },
+            {
+                "title": "Lesson 02 — Big O Notation: Complexity Without Math Degrees",
+                "slug": "0002-big-o-notation",
+                "path": "../dsa-javascript/lessons/0002-big-o-notation.html",
+                "section": "Lessons",
+                "duration": "6 min read",
+                "description": "How to evaluate time and space complexity in JavaScript without calculus or academic jargon."
+            },
+            {
+                "title": "Lesson 03 — JavaScript Arrays and Strings: The 80/20 Interview Guide",
+                "slug": "0003-javascript-arrays-and-strings",
+                "path": "../dsa-javascript/lessons/0003-javascript-arrays-and-strings.html",
+                "section": "Lessons",
+                "duration": "6 min read",
+                "description": "Master the essential built-in methods and avoid the hidden O(n²) performance traps that sink technical interviews."
             }
         ]
     },
@@ -18,47 +38,91 @@ const courseData = [
         "lessons": [
             {
                 "title": "Lesson 01 — The Big Picture: What Is CI/CD?",
-                "path": "../github-actions-docker/lessons/0001-the-big-picture-what-is-cicd.html"
+                "slug": "0001-the-big-picture-what-is-cicd",
+                "path": "../github-actions-docker/lessons/0001-the-big-picture-what-is-cicd.html",
+                "section": "Lessons",
+                "duration": "11 min read",
+                "description": "Before touching any YAML or Docker commands, let's build the mental model that makes everything else click."
             },
             {
                 "title": "Lesson 02 — What Docker Actually Is",
-                "path": "../github-actions-docker/lessons/0002-what-docker-actually-is.html"
+                "slug": "0002-what-docker-actually-is",
+                "path": "../github-actions-docker/lessons/0002-what-docker-actually-is.html",
+                "section": "Lessons",
+                "duration": "9 min read",
+                "description": "Demystifying containers, images, and the Dockerfile."
             },
             {
                 "title": "Lesson 03 — Anatomy of a GitHub Actions Workflow",
-                "path": "../github-actions-docker/lessons/0003-anatomy-of-a-workflow.html"
+                "slug": "0003-anatomy-of-a-workflow",
+                "path": "../github-actions-docker/lessons/0003-anatomy-of-a-workflow.html",
+                "section": "Lessons",
+                "duration": "8 min read",
+                "description": "Triggers, jobs, steps, and runners: translating the CI/CD pipeline into YAML."
             },
             {
                 "title": "Lesson 04 — Your First CI Pipeline",
-                "path": "../github-actions-docker/lessons/0004-your-first-ci-pipeline.html"
+                "slug": "0004-your-first-ci-pipeline",
+                "path": "../github-actions-docker/lessons/0004-your-first-ci-pipeline.html",
+                "section": "Lessons",
+                "duration": "8 min read",
+                "description": "Write a real workflow that lints and tests a Node.js app — and learn why needs: is not uses: ."
             },
             {
-                "title": "Lesson 05 — Matrix Builds &amp; Caching",
-                "path": "../github-actions-docker/lessons/0005-matrix-builds-and-caching.html"
+                "title": "Lesson 05 — Matrix Builds & Caching",
+                "slug": "0005-matrix-builds-and-caching",
+                "path": "../github-actions-docker/lessons/0005-matrix-builds-and-caching.html",
+                "section": "Lessons",
+                "duration": "13 min read",
+                "description": "Test across multiple Node.js versions in parallel — and make npm ci fast by caching your dependencies."
             },
             {
-                "title": "Lesson 06 — Secrets, Environment Variables &amp; Permissions",
-                "path": "../github-actions-docker/lessons/0006-secrets-env-permissions.html"
+                "title": "Lesson 06 — Secrets, Environment Variables & Permissions",
+                "slug": "0006-secrets-env-permissions",
+                "path": "../github-actions-docker/lessons/0006-secrets-env-permissions.html",
+                "section": "Lessons",
+                "duration": "5 min read",
+                "description": "Securely pass API keys to your workflow and grant the exact permissions it needs."
             },
             {
                 "title": "Lesson 07 — Essential Docker CLI",
-                "path": "../github-actions-docker/lessons/0007-essential-docker-cli.html"
+                "slug": "0007-essential-docker-cli",
+                "path": "../github-actions-docker/lessons/0007-essential-docker-cli.html",
+                "section": "Lessons",
+                "duration": "3 min read",
+                "description": "Mastering the terminal commands you need to control containers every single day."
             },
             {
                 "title": "Lesson 08 — Writing your first Dockerfile",
-                "path": "../github-actions-docker/lessons/0008-writing-your-first-dockerfile.html"
+                "slug": "0008-writing-your-first-dockerfile",
+                "path": "../github-actions-docker/lessons/0008-writing-your-first-dockerfile.html",
+                "section": "Lessons",
+                "duration": "3 min read",
+                "description": "Turning your application into an immutable container image."
             },
             {
-                "title": "Lesson 09 — Docker Volumes &amp; Persistent Data",
-                "path": "../github-actions-docker/lessons/0009-docker-volumes-persistent-data.html"
+                "title": "Lesson 09 — Docker Volumes & Persistent Data",
+                "slug": "0009-docker-volumes-persistent-data",
+                "path": "../github-actions-docker/lessons/0009-docker-volumes-persistent-data.html",
+                "section": "Lessons",
+                "duration": "5 min read",
+                "description": "Because losing your production database when a container restarts is generally considered \"bad practice\"."
             },
             {
-                "title": "Lesson 10 — Docker Networks &amp; Container Communication",
-                "path": "../github-actions-docker/lessons/0010-docker-networks-container-communication.html"
+                "title": "Lesson 10 — Docker Networks & Container Communication",
+                "slug": "0010-docker-networks-container-communication",
+                "path": "../github-actions-docker/lessons/0010-docker-networks-container-communication.html",
+                "section": "Lessons",
+                "duration": "6 min read",
+                "description": "How containers find and talk to each other — and why localhost is not the answer."
             },
             {
                 "title": "Docker CLI Reference",
-                "path": "../github-actions-docker/reference/docker-cheat-sheet.html"
+                "slug": "docker-cheat-sheet",
+                "path": "../github-actions-docker/reference/docker-cheat-sheet.html",
+                "section": "Reference",
+                "duration": "4 min read",
+                "description": "Core CLI commands, Dockerfile instructions, and mental models in one place."
             }
         ]
     },
@@ -68,15 +132,49 @@ const courseData = [
         "lessons": [
             {
                 "title": "Module 01, Lesson 1 — What Microservices Actually Are",
-                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html"
+                "slug": "0001-what-microservices-actually-are",
+                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0001-what-microservices-actually-are.html",
+                "section": "Module 01 Foundations",
+                "duration": "14 min read",
+                "description": "Why your monolith is not \"wrong,\" what problems microservices actually solve, and how to recognise when you have those problems."
             },
             {
-                "title": "Module 01, Lesson 2 — Bounded Contexts &amp; DDD",
-                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0002-bounded-contexts-and-ddd.html"
+                "title": "Module 01, Lesson 2 — Bounded Contexts & DDD",
+                "slug": "0002-bounded-contexts-and-ddd",
+                "path": "../microservices-nodejs/phase-1-foundations-and-design/module-01-foundations/0002-bounded-contexts-and-ddd.html",
+                "section": "Module 01 Foundations",
+                "duration": "17 min read",
+                "description": "How to draw service boundaries that match the business — not your folder structure. The framework that tells you where the line..."
             },
             {
-                "title": "Glossary — Microservices &amp; Distributed Systems",
-                "path": "../microservices-nodejs/reference/glossary.html"
+                "title": "Glossary — Microservices & Distributed Systems",
+                "slug": "glossary",
+                "path": "../microservices-nodejs/reference/glossary.html",
+                "section": "Reference",
+                "duration": "7 min read",
+                "description": "Canonical terminology for Microservices & Distributed Systems. Terms are added after the learner has encountered them in a lesson."
+            }
+        ]
+    },
+    {
+        "title": "React Advanced",
+        "folder": "react-advanced",
+        "lessons": [
+            {
+                "title": "Lesson 01 - Read a React Feature From the Outside In",
+                "slug": "0001-read-a-react-feature-from-the-outside-in",
+                "path": "../react-advanced/lessons/0001-read-a-react-feature-from-the-outside-in.html",
+                "section": "Lessons",
+                "duration": "3 min read",
+                "description": "Your first production-reading skill: trace what renders, what changes, and who owns the change."
+            },
+            {
+                "title": "Reference 01 - React Code Reading Map",
+                "slug": "0001-react-code-reading-map",
+                "path": "../react-advanced/reference/0001-react-code-reading-map.html",
+                "section": "Reference",
+                "duration": "2 min read",
+                "description": "A compact checklist for reading unfamiliar React features without getting lost."
             }
         ]
     }

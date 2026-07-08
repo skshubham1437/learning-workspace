@@ -32,6 +32,48 @@
 - [Article: "MonolithFirst" — Martin Fowler](https://martinfowler.com/bliki/MonolithFirst.html)
   Why starting with a monolith is often the right approach. Use for: Module 01.
 
+- [Docs: RabbitMQ Official Tutorials](https://www.rabbitmq.com/tutorials)
+  Step-by-step tutorials covering queues, exchanges, routing, topics, and RPC. Use for: Module 03 async messaging.
+
+- [Book: _Kafka in Action_ — Dylan Scott, Viktor Gamov, Dave Klein](https://www.manning.com/books/kafka-in-action)
+  Practical guide to Kafka architecture, producers, consumers, and stream processing. Use for: Module 03 Kafka deep dive.
+
+- [Docs: AWS SQS/SNS Developer Guides](https://docs.aws.amazon.com/sqs/) / [SNS](https://docs.aws.amazon.com/sns/)
+  Official AWS docs for managed message queues and pub/sub. Use for: Module 16 AWS Cloud Patterns.
+
+- [Docs: AWS ECS Developer Guide](https://docs.aws.amazon.com/ecs/)
+  Container orchestration on AWS. Use for: Module 16 deploying microservices to ECS.
+
+- [Docs: AWS EventBridge User Guide](https://docs.aws.amazon.com/eventbridge/)
+  Serverless event bus for event-driven architectures on AWS. Use for: Module 16.
+
+- [Docs: AWS API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/)
+  Managed API Gateway service. Use for: comparing with self-hosted gateways in Module 06 and Module 16.
+
+- [Docs: Kong Gateway Documentation](https://docs.konghq.com/gateway/latest/)
+  Open-source API gateway with plugins for auth, rate limiting, and observability. Use for: Module 06.
+
+- [Docs: Consul by HashiCorp](https://developer.hashicorp.com/consul/docs)
+  Service discovery, health checking, and service mesh. Use for: Module 06 Service Discovery.
+
+- [Docs: Microsoft CQRS Documentation](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs)
+  Excellent conceptual clarity on CQRS pattern with tradeoff analysis. Use for: Module 04.
+
+- [Concept: Netflix Hystrix — Resilience Principles](https://github.com/Netflix/Hystrix/wiki)
+  Circuit breaker, bulkhead, and fallback patterns from Netflix's production experience. Hystrix is archived but the concepts are canonical. Use for: Module 07.
+
+- [Docs: AWS Well-Architected Framework — Reliability Pillar](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/)
+  AWS best practices for building reliable systems. Use for: Module 07 and Module 16.
+
+- [Free Course: MongoDB University](https://learn.mongodb.com/)
+  Free courses covering aggregation pipeline, indexing, transactions, schema design, and change streams. Use for: MongoDB depth in Modules 04, 05, 12, 14.
+
+- [YouTube: Gaurav Sen — Distributed Systems Playlist](https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX)
+  Visual explanations of distributed systems concepts. Use for: Module 15 system design thinking.
+
+- [YouTube: ByteByteGo — System Design Fundamentals](https://www.youtube.com/@ByteByteGo)
+  Animated system design breakdowns. Use for: Module 15 interview preparation.
+
 ## Wisdom (Communities)
 
 - [r/microservices](https://reddit.com/r/microservices)
@@ -47,3 +89,4 @@
 
 - No high-quality, Node.js-specific guide to Kubernetes deployment patterns (most are Go/Java-focused)
 - Need to find production case studies from companies that migrated Node.js monoliths specifically
+- Need hands-on AWS workshop or tutorial that walks through ECS + SQS deployment for Node.js microservices

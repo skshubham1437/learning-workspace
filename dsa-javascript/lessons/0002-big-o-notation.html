@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 02 — Big O Notation: Complexity Without Math Degrees</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <link rel="stylesheet" href="../assets/ide.css">
+</head>
+<body>
+
+  <div class="lesson-number">Lesson 02</div>
+  <h1>Big O Notation: Complexity Without Math Degrees</h1>
+  <p class="subtitle">How to evaluate time and space complexity in JavaScript without calculus or academic jargon.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The "Evaluate" Step of UMPIRE</h2>
+  
+  <p>In <a href="0001-the-umpire-framework.html">Lesson 01</a>, we learned that the final step of the <a href="../GLOSSARY.md">UMPIRE Framework</a> is <strong>Evaluate</strong>. This is where the interviewer asks: <em>"So, how fast is your algorithm? How much memory does it use?"</em></p>
+
+  <p>If you try to answer with real seconds or milliseconds, you'll run into a problem: a script running on an M3 Max MacBook will execute 100 times faster than the same script running on a 10-year-old budget laptop. We need a universal metric that ignores hardware speeds.</p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Core Concept: Big O</span>
+    <p><strong>Big O notation</strong> simply measures how the number of operations scales as the input size (<code style="background:transparent;border:none;padding:0;">n</code>) grows toward infinity.</p>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The "Big 3" Time Complexities in JavaScript</h2>
+
+  <p>For 80% of standard software engineering interviews, you only need to recognize three fundamental rates of growth in your JavaScript code:</p>
+
+  <div class="step-box" style="margin-top: 2rem;">
+    <div class="step-letter">1</div>
+    <div class="step-title">O(1) — Constant Time</div>
+    <p>The execution time never changes, whether your array has 5 items or 5,000,000 items. It is instant and flat.</p>
+    <pre><code>// O(1) examples:
+const first = arr[0];              // Array index lookup
+const val = myMap.get('key');      // Map / Object key lookup
+arr.push(42);                      // Pushing to end of array</code></pre>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">n</div>
+    <div class="step-title">O(n) — Linear Time</div>
+    <p>If the input array doubles in size, the work doubles. You must visit every item at least once.</p>
+    <pre><code>// O(n) examples:
+for (let num of arr) { ... }       // A standard loop
+const doubled = arr.map(x => x*2); // Array transformations
+const found = arr.indexOf(target); // Linear searching</code></pre>
+  </div>
+
+  <div class="step-box">
+    <div class="step-letter">n²</div>
+    <div class="step-title">O(n²) — Quadratic Time</div>
+    <p>For every item in the array, you loop through the entire array again. Noticeably sluggish for large inputs.</p>
+    <pre><code>// O(n²) examples:
+for (let i = 0; i < arr.length; i++) {
+  for (let j = 0; j < arr.length; j++) {
+    // Nested loop checking every pair!
+  }
+}</code></pre>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>The Two Golden Rules of Simplification</h2>
+
+  <p>When analyzing code, interviewers want the cleanest, most simplified Big O expression. Follow these two rules:</p>
+
+  <p><strong>1. Drop Constants:</strong> If your code loops through an array twice, technically that is <code>O(2n)</code>. In Big O, we drop constants and simply call it <strong><code>O(n)</code></strong>.</p>
+  
+  <p><strong>2. Drop Non-Dominant Terms:</strong> If your algorithm does a linear scan <code>O(n)</code> followed by a nested quadratic loop <code>O(n²)</code>, the total time is <code>O(n² + n)</code>. As <code>n</code> becomes huge (e.g., 1,000,000), the linear <code>n</code> becomes mathematically insignificant compared to <code>n²</code>. We drop the smaller term and call it <strong><code>O(n²)</code></strong>.</p>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Space Complexity: Where Does Memory Go?</h2>
+
+  <p>Time complexity is about CPU speed; <strong>Space complexity</strong> is about RAM usage (auxiliary memory created by your algorithm).</p>
+
+  <ul>
+    <li><strong><code>O(1) Space</code> (In-Place):</strong> You only create a few simple variables (like index pointers <code>let i = 0</code> or temp swapping variables). No new arrays are allocated.</li>
+    <li><strong><code>O(n) Space</code>:</strong> You allocate a new array, string, or Hash Map whose size grows proportionally to the input array (e.g., using <code>arr.slice()</code> or <code>arr.filter()</code>).</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Interactive Retrieval Practice</h2>
+
+  <div class="retrieval">
+    <h3>Test Your Understanding</h3>
+    <p class="retrieval-question">Analyze the time complexity of the JavaScript snippet below and select the correct answer.</p>
+    
+    <pre><code>function hasDuplicate(arr) {
+  const seen = new Set();
+  for (let num of arr) {
+    if (seen.has(num)) return true;
+    seen.add(num);
+  }
+  return false;
+}</code></pre>
+
+    <div class="quiz-options" id="quiz-1">
+      <button class="quiz-btn" onclick="checkAnswer(1, this, false)">A) O(1) Constant Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(1, this, true)">B) O(n) Linear Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(1, this, false)">C) O(n²) Quadratic Time Complexity</button>
+    </div>
+    <div class="quiz-feedback" id="feedback-1">
+      <strong>Correct!</strong> Set lookups (<code>seen.has</code>) and insertions (<code>seen.add</code>) take <code>O(1)</code> constant time. Since we loop through the array of size <code>n</code> exactly once, the total time complexity is <strong><code>O(n)</code></strong>. (Space complexity is also <code>O(n)</code> to store the Set!).
+    </div>
+
+    <hr style="border:0; border-top:1px solid var(--border); margin: 2rem 0;" />
+
+    <p class="retrieval-question">What is the time complexity of this sequential loop snippet?</p>
+    
+    <pre><code>function printTwice(arr) {
+  for (let x of arr) { console.log(x); }
+  for (let y of arr) { console.log(y); }
+}</code></pre>
+
+    <div class="quiz-options" id="quiz-2">
+      <button class="quiz-btn" onclick="checkAnswer(2, this, false)">A) O(n²) Quadratic Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(2, this, true)">B) O(n) Linear Time Complexity</button>
+      <button class="quiz-btn" onclick="checkAnswer(2, this, false)">C) O(2n) Double Time Complexity</button>
+    </div>
+    <div class="quiz-feedback" id="feedback-2">
+      <strong>Correct!</strong> Even though we loop twice (which is technically <code>2n</code> steps), Rule #1 of Big O states that we <strong>drop constants</strong>. Two sequential loops do not multiply into quadratic time; they simplify down to <strong><code>O(n)</code></strong> linear time.
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Primary Source & Citation</h2>
+  <p>To dive deeper into complexity analysis across data structures, bookmark the canonical primary source for pattern-based prep:</p>
+  <ul>
+    <li><a href="https://neetcode.io/courses/lessons/big-o-notation" target="_blank">NeetCode: Big O Notation Guide & Video Explanation</a> — Highly recommended for visualizing complexity curves.</li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set" target="_blank">MDN Web Docs: JavaScript Set & Map Time Complexity</a> — Official reference for JS built-in object performance.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Interactive Complexity Experiment</h2>
+  <p>Practice writing an <code>O(n)</code> linear scan! Write a function <code>findMax(arr)</code> that finds the largest number in an array without sorting (sorting takes <code>O(n log n)</code> time). Your loop should visit each element only once!</p>
+
+  <div class="interactive-ide" 
+       data-title="Challenge: findMax(arr) in O(n) linear time"
+       data-function-name="findMax"
+       data-starter-code="function findMax(arr) {&#10;  // Write your code here&#10;}">
+    <script type="application/json" class="test-cases">
+      [
+        { "input": [[3, 7, 2, 9, 4]], "expected": 9, "desc": "Standard array of positives" },
+        { "input": [[-10, -5, -2, -20]], "expected": -2, "desc": "Array of negative numbers" },
+        { "input": [[42]], "expected": 42, "desc": "Single element array" },
+        { "input": [[]], "expected": null, "desc": "Empty array edge case" }
+      ]
+    </script>
+  </div>
+
+  <details style="margin-top: 1.5rem; cursor: pointer;">
+    <summary style="font-weight: 500; color: var(--accent);">Reveal Solution & Explanation</summary>
+    <div style="margin-top: 1rem; padding: 1rem; border-left: 3px solid var(--accent); background: var(--surface);">
+      <pre><code>function findMax(arr) {
+  if (arr.length === 0) return null;
+  let maxVal = arr[0];
+  
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > maxVal) {
+      maxVal = arr[i];
+    }
+  }
+  return maxVal;
+}</code></pre>
+      <p style="margin-top: 1rem;"><strong>Explanation:</strong> We initialize <code>maxVal</code> to the first element and loop through the rest of the array exactly once. For each element, we compare it with our current maximum and update it if a larger value is found. This requires visiting each element once, resulting in <strong>O(n) linear time complexity</strong>.</p>
+    </div>
+  </details>
+
+  <!-- ───────────────────────────────────── -->
+  <h2>Practice Questions</h2>
+  <p>Test your understanding of Time and Space Complexity by analyzing your solutions to these problems:</p>
+  <ul>
+    <li><a href="https://leetcode.com/problems/contains-duplicate/" target="_blank">LeetCode 217: Contains Duplicate</a> (Can you solve it in O(n) time instead of O(n²)?)</li>
+    <li><a href="https://leetcode.com/problems/majority-element/" target="_blank">LeetCode 169: Majority Element</a> (Pay attention to the space complexity of your solution)</li>
+  </ul>
+
+  <!-- ───────────────────────────────────── -->
+  <div class="lesson-footer">
+    <p>💬 <strong>Teacher's Reminder:</strong> I am your AI coding teacher! If any part of Big O simplification or space complexity feels abstract, ask me a follow-up question right now in the chat and we can trace code snippets together.</p>
+    <p style="margin-top:0.5rem;"><a href="0001-the-umpire-framework.html">← Previous: Lesson 01 (UMPIRE Framework)</a> · <a href="../GLOSSARY.md">View Glossary</a></p>
+  </div>
+
+  <script>
+    function checkAnswer(quizId, btn, isCorrect) {
+      const parent = document.getElementById('quiz-' + quizId);
+      const feedback = document.getElementById('feedback-' + quizId);
+      
+      // Reset buttons in this quiz
+      parent.querySelectorAll('.quiz-btn').forEach(b => {
+        b.classList.remove('correct', 'wrong');
+      });
+
+      if (isCorrect) {
+        btn.classList.add('correct');
+        feedback.className = 'quiz-feedback correct show';
+      } else {
+        btn.classList.add('wrong');
+        feedback.className = 'quiz-feedback wrong show';
+        feedback.innerHTML = '<strong>Not quite!</strong> Think about how many times the loop runs relative to the array length <code>n</code>, and remember our simplification rules.';
+      }
+    }
+  </script>
+  <script src="../assets/ide.js"></script>
+</body>
+</html>

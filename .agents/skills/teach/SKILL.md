@@ -15,7 +15,7 @@ Treat the current directory as a teaching workspace. The state of their learning
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
 - `RESOURCES.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
 - `./learning-records/*.md`: A directory of learning records, which capture what the user has learned. These are loosely equivalent to architectural decision records in software development - they capture non-obvious lessons and key insights that may need to be revised later, or drive future sessions. These should be used to calculate the zone of proximal development. They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
-- `./lessons/*.html`: A directory of lessons. A **lesson** is a single, self-contained HTML output that teaches one tightly-scoped thing tied to the mission. This is the primary unit of teaching in this workspace.
+- **Lessons**: A **lesson** is a single, self-contained HTML output that teaches one tightly-scoped thing tied to the mission. This is the primary unit of teaching in this workspace. See [Lesson Location](#lesson-location) for where lesson files live.
 - `./assets/*`: Reusable **components** shared across lessons. See [Assets](#assets).
 - `NOTES.md`: A scratchpad for you to jot down user preferences, or working notes.
 
@@ -46,7 +46,16 @@ Fluency can give the user an illusory sense of mastery, but storage strength is 
 
 ## Lessons
 
-A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one self-contained HTML file, saved to `./lessons/` and titled `0001-<dash-case-name>.html` where the number increments each time.
+A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one self-contained HTML file, titled `0001-<dash-case-name>.html` where the number increments each time.
+
+### Lesson Location
+
+Where lesson files live depends on the workspace's curriculum structure:
+
+- **Simple workspaces** (no modules): Save lessons directly in `./lessons/`.
+- **Multi-module workspaces**: Save lessons inside the module directory, either directly (`module-XX/0001-name.html`) or in a `module-XX/lessons/` subdirectory. Choose one pattern per workspace and stick with it.
+
+Check the existing workspace structure before creating the first lesson. If modules exist, follow whatever pattern is already established.
 
 A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
 
@@ -104,10 +113,21 @@ For skill acquisition, difficulty is the tool. Effortful retrieval is what build
 
 - Interactive lessons, using quizzes and light in-browser tasks
 - Lessons which guide the user through a list of real-world steps to take (for instance, yoga poses)
+- **Code exercises** that produce running artifacts. See [Exercise Codebases](#exercise-codebases).
 
 Each of these should be based on a **feedback loop**, where the user receives feedback on their performance. This feedback loop should be as tight as possible, giving feedback immediately - and ideally automatically.
 
 For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
+
+### Exercise Codebases
+
+For technical topics, many exercises require the user to build running code — microservices, CLI tools, scripts, or full applications. These need a home.
+
+- Store exercise code in `./exercises/` at the workspace root, or within each module (e.g. `module-XX/exercises/`). Choose one pattern per workspace.
+- Each exercise should have a README with: the goal, verification criteria (how the user knows they succeeded), and any provided starter files.
+- Exercises may span multiple sessions. Track partially-completed exercises in `NOTES.md` under a "Progress Tracking" section.
+- For multi-service exercises (e.g. building 2 microservices), use subdirectories within the exercise folder.
+- The lesson that introduces an exercise should link to the exercise directory.
 
 ## Acquiring Wisdom
 
@@ -138,3 +158,41 @@ Glossaries, in particular, are an essential reference. Once one is created, it s
 ## `NOTES.md`
 
 The user will sometimes express preferences of how they want to be taught, or things you should keep in mind. This is the place to record those preferences, so you can refer back to them when designing lessons or working with the user.
+
+## Curriculum Organization
+
+Some topics are small enough for a flat list of lessons. Others — like "microservices architecture" or "machine learning" — require a multi-level curriculum.
+
+When a topic grows beyond ~10 lessons, organize into **phases** and **modules**:
+
+```
+./phase-1-name/
+  README.md          # Phase overview, module list, goals, status
+  module-01-name/
+    lessons/         # or lesson files directly in this folder
+    reference/       # module-specific reference documents
+    exercises/       # code exercises for this module
+  module-02-name/
+    ...
+./phase-2-name/
+  ...
+```
+
+- Each **phase** groups related modules and has a `README.md` with a goal statement and status checkboxes.
+- Each **module** covers a coherent topic area (e.g. "Communication Patterns", "Reliability").
+- Lesson numbering is sequential **within each module**, not globally.
+- Reference documents can live at the workspace root (`./reference/`) for cross-module references, or within individual modules for module-specific references.
+
+The workspace root should still have `MISSION.md`, `RESOURCES.md`, `NOTES.md`, and `learning-records/` — these are global across the curriculum.
+
+## Prerequisites
+
+For multi-module curricula, modules often have dependencies: you can't teach Kafka without understanding async messaging, you can't teach Kubernetes without Docker Compose proficiency.
+
+Track prerequisites in `NOTES.md` under a "Prerequisite Gaps" section. For each prerequisite:
+
+- State what is needed (e.g. "Node.js streams backpressure")
+- State which module needs it (e.g. "needed before Kafka in Module 03")
+- Mark it resolved when the user demonstrates understanding (via a learning record)
+
+Before beginning a new module, check that its prerequisites are satisfied. If not, design a prerequisite-filling lesson first.

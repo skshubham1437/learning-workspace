@@ -34,6 +34,16 @@
 - Redis pub/sub and data structures → needed before distributed caching (Module 12)
 - Docker Compose multi-service → needed before Kubernetes (Module 10)
 - Structured logging → needed before observability stack (Module 08)
+- AWS fundamentals (IAM, VPC basics, console navigation) → needed before AWS Cloud Patterns (Module 16)
+
+## MongoDB Advanced Integration Notes
+
+When designing exercises, weave MongoDB depth into existing modules rather than teaching it standalone:
+- **Module 04 (CQRS):** Use MongoDB aggregation pipelines for read-model projections
+- **Module 04 (Event Sourcing):** Use MongoDB change streams to trigger projections
+- **Module 05 (Outbox):** Use MongoDB multi-document transactions for atomic outbox writes
+- **Module 12 (Scaling):** Demonstrate read replicas, indexing strategy, and schema design for scale
+- **Module 14 (Capstone):** The capstone should exercise all of the above in a real system
 
 ## Progress Tracking
 

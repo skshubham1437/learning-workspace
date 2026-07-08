@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference 01 - React Code Reading Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;650&amp;family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+  <main>
+    <div class="lesson-number">Reference 01</div>
+    <h1>React Code Reading Map</h1>
+    <p class="subtitle">A compact checklist for reading unfamiliar React features without getting lost.</p>
+
+    <h2>The three questions</h2>
+    <div class="grid">
+      <section class="tile">
+        <b>What renders?</b>
+        <p>Find the route, page, component tree, and repeated list boundaries.</p>
+      </section>
+      <section class="tile">
+        <b>What changes?</b>
+        <p>Separate props, local state, derived values, URL values, and server data.</p>
+      </section>
+      <section class="tile">
+        <b>Who owns it?</b>
+        <p>Find the component, hook, cache, store, or router responsible for updates.</p>
+      </section>
+    </div>
+
+    <h2>The reading order</h2>
+    <div class="reading-map">
+      <div class="reading-step"><span>1</span>Start at the user-visible screen or route.</div>
+      <div class="reading-step"><span>2</span>Identify the top-level page component and its immediate children.</div>
+      <div class="reading-step"><span>3</span>Mark every prop flowing into the feature.</div>
+      <div class="reading-step"><span>4</span>Mark every `useState`, reducer, context, query, router hook, and custom hook.</div>
+      <div class="reading-step"><span>5</span>For every displayed value, decide whether it is original state or derived data.</div>
+      <div class="reading-step"><span>6</span>For every event handler, trace which owner it updates.</div>
+      <div class="reading-step"><span>7</span>Only after the above, inspect styling, performance, and package details.</div>
+    </div>
+
+    <div class="callout">
+      <strong>Rule of thumb:</strong> if a value can be calculated from props or existing state during render, treat it as derived data first. Reach for state only when the app must remember a changing value.
+    </div>
+
+    <p class="footnote">
+      Primary source: <a href="https://react.dev/learn/thinking-in-react">React docs, Thinking in React</a>.
+      Related lesson: <a href="../lessons/0001-read-a-react-feature-from-the-outside-in.html">Read a React Feature From the Outside In</a>.
+    </p>
+  </main>
+</body>
+</html>
