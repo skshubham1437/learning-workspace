@@ -3,7 +3,11 @@ const path = require('path');
 
 const WORKSPACE_DIR = path.join(__dirname, '..');
 const OUTPUT_FILE = path.join(__dirname, 'data.js');
-const EXCLUDE_DIRS = ['.git', 'course-platform', 'node_modules', '.agents'];
+const EXCLUDE_DIRS = ['.git', 'course-platform', 'node_modules', '.agents', 'playground', 'assets'];
+
+// ──────────────────────────────────────────────────────────────
+//  LESSON DATA GENERATOR
+// ──────────────────────────────────────────────────────────────
 
 function getAllHtmlFiles(dirPath, arrayOfFiles = []) {
     let files = fs.readdirSync(dirPath);
@@ -139,7 +143,13 @@ const courseData = ${JSON.stringify(courseData, null, 4)};
 `;
 
     fs.writeFileSync(OUTPUT_FILE, jsContent);
-    console.log('Successfully generated data.js with rich metadata, duration, sections, and slugs!');
+    console.log('✅ Generated data.js with rich metadata, duration, sections, and slugs.');
+    return courseData;
 }
 
+// ──────────────────────────────────────────────────────────────
+//  RUN
+// ──────────────────────────────────────────────────────────────
+
 generateCourseData();
+

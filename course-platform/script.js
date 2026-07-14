@@ -1,6 +1,7 @@
 function initApp() {
     const sidebarNav = document.getElementById('sidebar-nav');
     const iframe = document.getElementById('content-frame');
+    const iframeContainer = document.getElementById('iframe-container');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const markCompleteBtn = document.getElementById('mark-complete-btn');
@@ -10,6 +11,7 @@ function initApp() {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const breadcrumbsEl = document.getElementById('breadcrumbs');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const footerNav = document.getElementById('footer-nav');
 
     // Command Palette Elements
     const paletteOverlay = document.getElementById('command-palette-overlay');
@@ -17,6 +19,28 @@ function initApp() {
     const paletteResults = document.getElementById('palette-results');
     const headerSearchBtn = document.getElementById('header-search-btn');
     const sidebarSearchBtn = document.getElementById('sidebar-search-btn');
+
+    // Flashcard Elements
+    const flashcardView = document.getElementById('flashcard-view');
+    const deckListEl = document.getElementById('deck-list');
+    const fcCard = document.getElementById('fc-card');
+    const fcCardWrapper = document.getElementById('fc-card-wrapper');
+    const fcFrontContent = document.getElementById('fc-front-content');
+    const fcBackContent = document.getElementById('fc-back-content');
+    const fcCardBadge = document.getElementById('fc-card-badge');
+    const fcCardBadgeBack = document.getElementById('fc-card-badge-back');
+    const fcCardSource = document.getElementById('fc-card-source');
+    const fcCardCounter = document.getElementById('fc-card-counter');
+    const fcActions = document.getElementById('fc-actions');
+    const fcEmptyState = document.getElementById('fc-empty-state');
+    const fcDeckFilter = document.getElementById('fc-deck-filter');
+    const fcTagFilter = document.getElementById('fc-tag-filter');
+    const fcExportBtn = document.getElementById('fc-export-btn');
+    const fcDueCount = document.getElementById('fc-due-count');
+    const fcReviewedCount = document.getElementById('fc-reviewed-count');
+    const fcMasteredCount = document.getElementById('fc-mastered-count');
+    const fcTotalCount = document.getElementById('fc-total-count');
+    const fcProgressFill = document.getElementById('fc-progress-fill');
 
     // Flatten lessons into a single array for easy next/prev navigation
     let flatLessons = [];
@@ -37,6 +61,9 @@ function initApp() {
     let paletteOpen = false;
     let selectedPaletteIndex = 0;
     let filteredPaletteLessons = [];
+
+    // ── App Mode: 'lessons' or 'flashcards' ──────────────
+    let appMode = 'lessons';
 
     // ── Theme Management ───────────────────────────────
     function getInitialTheme() {
@@ -133,8 +160,57 @@ function initApp() {
         sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
     }
 
+    // ══════════════════════════════════════════════════════
+    //  MODE SWITCHING: Lessons ↔ Flashcards
+    // ══════════════════════════════════════════════════════
+
+    function switchToLessons() {
+        appMode = 'lessons';
+        if (iframeContainer) iframeContainer.style.display = '';
+        if (flashcardView) flashcardView.style.display = 'none';
+        if (footerNav) footerNav.style.display = '';
+
+        // Deactivate deck items in sidebar
+        document.querySelectorAll('.deck-item').forEach(el => el.classList.remove('active'));
+
+        updateUI();
+    }
+
+    function switchToFlashcards(deckName) {
+        appMode = 'flashcards';
+        if (iframeContainer) iframeContainer.style.display = 'none';
+        if (flashcardView) flashcardView.style.display = 'flex';
+        if (footerNav) footerNav.style.display = 'none';
+
+        // Deactivate lesson items in sidebar
+        document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
+
+        // Activate deck item
+        document.querySelectorAll('.deck-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.deck === deckName || (deckName === 'all' && el.dataset.deck === 'all'));
+        });
+
+        // Update breadcrumbs
+        if (breadcrumbsEl) {
+            const displayName = deckName === 'all' ? 'All Decks' : deckName;
+            breadcrumbsEl.innerHTML = `
+                <span class="breadcrumb-item">Flashcards</span>
+                <span class="breadcrumb-sep">›</span>
+                <span class="breadcrumb-item active">${displayName}</span>
+            `;
+        }
+
+        document.title = `Flashcard Review — Learning Hub`;
+
+        // Set deck filter
+        if (fcDeckFilter) fcDeckFilter.value = deckName === 'all' ? 'all' : deckName;
+
+        fcEngine.startSession(deckName);
+    }
+
     // ── 1. Generate Sidebar DOM ────────────────────────
     function renderSidebar() {
+        if (!sidebarNav) return;
         sidebarNav.innerHTML = '';
 
         courseData.forEach((course, cIndex) => {
@@ -199,6 +275,7 @@ function initApp() {
                 `;
 
                 item.addEventListener('click', () => {
+                    switchToLessons();
                     loadLesson(globalIdx);
                     if (window.innerWidth <= 768) toggleSidebar(true);
                 });
@@ -212,6 +289,54 @@ function initApp() {
         });
 
         updateProgressUI();
+    }
+
+    // ── Render Deck List in Sidebar ────────────────────
+    function renderDeckList() {
+        if (!deckListEl || typeof flashcardData === 'undefined') return;
+
+        deckListEl.innerHTML = '';
+
+        // Collect unique decks
+        const deckNames = [...new Set(flashcardData.map(c => c.deck))];
+
+        // "All Decks" item
+        const allItem = document.createElement('li');
+        allItem.className = 'deck-item';
+        allItem.dataset.deck = 'all';
+        const totalDue = fcEngine.getDueCount('all');
+        allItem.innerHTML = `
+            <div class="deck-item-left">
+                <span class="deck-item-icon">📚</span>
+                <span class="deck-item-name">All Decks</span>
+            </div>
+            <span class="deck-due-badge ${totalDue === 0 ? 'empty' : ''}">${totalDue} due</span>
+        `;
+        allItem.addEventListener('click', () => {
+            switchToFlashcards('all');
+            if (window.innerWidth <= 768) toggleSidebar(true);
+        });
+        deckListEl.appendChild(allItem);
+
+        // Per-deck items
+        deckNames.forEach(name => {
+            const due = fcEngine.getDueCount(name);
+            const item = document.createElement('li');
+            item.className = 'deck-item';
+            item.dataset.deck = name;
+            item.innerHTML = `
+                <div class="deck-item-left">
+                    <span class="deck-item-icon">🃏</span>
+                    <span class="deck-item-name">${name}</span>
+                </div>
+                <span class="deck-due-badge ${due === 0 ? 'empty' : ''}">${due} due</span>
+            `;
+            item.addEventListener('click', () => {
+                switchToFlashcards(name);
+                if (window.innerWidth <= 768) toggleSidebar(true);
+            });
+            deckListEl.appendChild(item);
+        });
     }
 
     // ── 2. Load Lesson & Stable Routing ────────────────
@@ -284,6 +409,7 @@ function initApp() {
 
         // Update course group progress bars
         courseData.forEach((course, cIdx) => {
+            if (!sidebarNav) return;
             const groupEl = sidebarNav.children[cIdx];
             if (!groupEl) return;
             const totalInCourse = course.lessons.length;
@@ -308,7 +434,7 @@ function initApp() {
         // Update active class in sidebar
         document.querySelectorAll('.lesson-item').forEach(el => {
             el.classList.remove('active');
-            if (parseInt(el.dataset.index) === currentLessonIndex) {
+            if (parseInt(el.dataset.index) === currentLessonIndex && appMode === 'lessons') {
                 el.classList.add('active');
                 const group = el.closest('.course-group');
                 if (group) group.classList.add('expanded');
@@ -363,6 +489,7 @@ function initApp() {
     }
 
     function renderPaletteResults(query) {
+        if (!paletteResults) return;
         paletteResults.innerHTML = '';
         const q = query.toLowerCase().trim();
 
@@ -405,6 +532,7 @@ function initApp() {
             });
 
             item.addEventListener('click', () => {
+                switchToLessons();
                 loadLesson(lesson.globalIndex);
                 togglePalette(false);
             });
@@ -452,6 +580,7 @@ function initApp() {
                 e.preventDefault();
                 const selectedLesson = filteredPaletteLessons[selectedPaletteIndex];
                 if (selectedLesson) {
+                    switchToLessons();
                     loadLesson(selectedLesson.globalIndex);
                     togglePalette(false);
                 }
@@ -459,8 +588,28 @@ function initApp() {
             return;
         }
 
-        // Guard: do not intercept arrow keys if typing inside form inputs
+        // Guard: do not intercept keys if typing inside form inputs
         if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+        // ── Flashcard Mode Shortcuts ──
+        if (appMode === 'flashcards') {
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                fcEngine.flipCard();
+                return;
+            }
+            if (['1', '2', '3', '4'].includes(e.key)) {
+                e.preventDefault();
+                fcEngine.rateCard(parseInt(e.key));
+                return;
+            }
+            // ESC exits flashcard mode
+            if (e.key === 'Escape') {
+                switchToLessons();
+                return;
+            }
+            return;
+        }
 
         // Lesson Navigation (Left/Right Arrows)
         if (e.key === 'ArrowLeft') {
@@ -471,6 +620,7 @@ function initApp() {
     });
 
     function updatePaletteSelection() {
+        if (!paletteResults) return;
         const items = paletteResults.querySelectorAll('.palette-item');
         items.forEach((el, idx) => {
             if (idx === selectedPaletteIndex) {
@@ -487,9 +637,17 @@ function initApp() {
         const hash = window.location.hash.slice(1); // remove leading #
         if (!hash) return false;
 
+        // Check for flashcard hash
+        if (hash === 'flashcards' || hash.startsWith('flashcards/')) {
+            const deckPart = decodeURIComponent(hash.split('/').slice(1).join('/') || 'all');
+            switchToFlashcards(deckPart === '' ? 'all' : deckPart);
+            return true;
+        }
+
         // Try matching folder/slug
         let foundIdx = flatLessons.findIndex(fl => `${fl.folder}/${fl.slug}` === hash);
         if (foundIdx !== -1) {
+            if (appMode !== 'lessons') switchToLessons();
             if (foundIdx !== currentLessonIndex) loadLesson(foundIdx);
             return true;
         }
@@ -510,16 +668,351 @@ function initApp() {
         handleHashNavigation();
     });
 
-    // Initialize Application
+    // ══════════════════════════════════════════════════════
+    //  FLASHCARD ENGINE (SM-2 Spaced Repetition)
+    // ══════════════════════════════════════════════════════
+
+    const fcEngine = (() => {
+        const STORAGE_KEY = 'flashcardSRS';
+        let srsState = {}; // { cardId: { interval, repetitions, easeFactor, dueDate } }
+        let sessionCards = [];
+        let sessionIndex = 0;
+        let reviewedThisSession = 0;
+        let isFlipped = false;
+        let currentDeck = 'all';
+
+        // Load SRS state from localStorage
+        function loadState() {
+            try {
+                srsState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            } catch (e) {
+                srsState = {};
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(srsState));
+        }
+
+        function getCardState(cardId) {
+            if (!srsState[cardId]) {
+                srsState[cardId] = {
+                    interval: 0,      // days until next review
+                    repetitions: 0,   // consecutive correct answers
+                    easeFactor: 2.5,  // SM-2 ease factor
+                    dueDate: new Date().toISOString().split('T')[0] // due today
+                };
+            }
+            return srsState[cardId];
+        }
+
+        function isDue(cardId) {
+            const state = getCardState(cardId);
+            const today = new Date().toISOString().split('T')[0];
+            return state.dueDate <= today;
+        }
+
+        function isMastered(cardId) {
+            const state = srsState[cardId];
+            return state && state.interval >= 21; // 21+ day interval = mastered
+        }
+
+        function getDueCount(deckName) {
+            if (typeof flashcardData === 'undefined') return 0;
+            return flashcardData.filter(card => {
+                if (deckName !== 'all' && card.deck !== deckName) return false;
+                return isDue(card.id);
+            }).length;
+        }
+
+        // SM-2 Algorithm
+        function sm2(cardId, quality) {
+            // quality: 1=Again, 2=Hard, 3=Good, 4=Easy
+            const state = getCardState(cardId);
+            const q = quality >= 3 ? quality : 0; // SM-2 uses 0-5, we map our 1-4
+
+            if (quality < 3) {
+                // Failed: reset
+                state.repetitions = 0;
+                state.interval = quality === 1 ? 0 : 1; // Again = <1min (same session), Hard = 1 day
+            } else {
+                // Passed
+                state.repetitions += 1;
+                if (state.repetitions === 1) {
+                    state.interval = 1;
+                } else if (state.repetitions === 2) {
+                    state.interval = 6;
+                } else {
+                    state.interval = Math.round(state.interval * state.easeFactor);
+                }
+
+                // Easy bonus
+                if (quality === 4) {
+                    state.interval = Math.max(state.interval, 4);
+                    state.easeFactor += 0.15;
+                }
+            }
+
+            // Adjust ease factor (SM-2 formula)
+            state.easeFactor = Math.max(1.3,
+                state.easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+            );
+
+            // Calculate next due date
+            const next = new Date();
+            next.setDate(next.getDate() + state.interval);
+            state.dueDate = next.toISOString().split('T')[0];
+
+            srsState[cardId] = state;
+            saveState();
+        }
+
+        function getFilteredCards() {
+            if (typeof flashcardData === 'undefined') return [];
+            let cards = flashcardData;
+
+            // Filter by deck
+            if (currentDeck !== 'all') {
+                cards = cards.filter(c => c.deck === currentDeck);
+            }
+
+            // Filter by tag
+            const tagFilter = fcTagFilter ? fcTagFilter.value : 'all';
+            if (tagFilter !== 'all') {
+                cards = cards.filter(c => c.tags && c.tags.includes(tagFilter));
+            }
+
+            return cards;
+        }
+
+        function startSession(deckName) {
+            currentDeck = deckName || 'all';
+            loadState();
+            reviewedThisSession = 0;
+
+            const filtered = getFilteredCards();
+
+            // Get due cards first
+            const dueCards = filtered.filter(c => isDue(c.id));
+            
+            // Shuffle due cards for variety
+            for (let i = dueCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [dueCards[i], dueCards[j]] = [dueCards[j], dueCards[i]];
+            }
+
+            sessionCards = dueCards;
+            sessionIndex = 0;
+            isFlipped = false;
+
+            updateFilters();
+            updateStats();
+            showCurrentCard();
+        }
+
+        function updateFilters() {
+            if (!fcDeckFilter || typeof flashcardData === 'undefined') return;
+
+            // Populate deck filter
+            const deckNames = [...new Set(flashcardData.map(c => c.deck))];
+            fcDeckFilter.innerHTML = '<option value="all">All Decks</option>';
+            deckNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                fcDeckFilter.appendChild(opt);
+            });
+            fcDeckFilter.value = currentDeck;
+
+            // Populate tag filter
+            const allTags = [...new Set(flashcardData.flatMap(c => c.tags || []))].sort();
+            fcTagFilter.innerHTML = '<option value="all">All Tags</option>';
+            allTags.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag;
+                opt.textContent = tag;
+                fcTagFilter.appendChild(opt);
+            });
+        }
+
+        function updateStats() {
+            const filtered = getFilteredCards();
+            const due = filtered.filter(c => isDue(c.id)).length;
+            const mastered = filtered.filter(c => isMastered(c.id)).length;
+            const total = filtered.length;
+
+            if (fcDueCount) fcDueCount.textContent = due;
+            if (fcReviewedCount) fcReviewedCount.textContent = reviewedThisSession;
+            if (fcMasteredCount) fcMasteredCount.textContent = mastered;
+            if (fcTotalCount) fcTotalCount.textContent = total;
+
+            // Update progress bar
+            if (fcProgressFill && total > 0) {
+                const reviewedPct = Math.round(((total - due) / total) * 100);
+                fcProgressFill.style.width = `${reviewedPct}%`;
+            }
+
+            // Update sidebar deck due counts
+            renderDeckList();
+        }
+
+        function showCurrentCard() {
+            if (sessionCards.length === 0 || sessionIndex >= sessionCards.length) {
+                // No more cards
+                if (fcCardWrapper) fcCardWrapper.style.display = 'none';
+                if (fcEmptyState) fcEmptyState.style.display = 'block';
+                if (fcActions) fcActions.classList.remove('visible');
+                if (fcCardCounter) fcCardCounter.textContent = '';
+                return;
+            }
+
+            const card = sessionCards[sessionIndex];
+
+            if (fcCardWrapper) fcCardWrapper.style.display = '';
+            if (fcEmptyState) fcEmptyState.style.display = 'none';
+
+            // Reset flip
+            isFlipped = false;
+            if (fcCard) fcCard.classList.remove('flipped');
+            if (fcActions) fcActions.classList.remove('visible');
+
+            // Set content
+            if (fcFrontContent) fcFrontContent.innerHTML = card.front;
+            if (fcBackContent) fcBackContent.innerHTML = card.back;
+            if (fcCardBadge) fcCardBadge.textContent = (card.tags && card.tags[0]) || 'card';
+            if (fcCardBadgeBack) fcCardBadgeBack.textContent = 'answer';
+            if (fcCardSource) fcCardSource.textContent = `Source: ${card.source || 'unknown'}`;
+
+            // Counter
+            if (fcCardCounter) {
+                fcCardCounter.textContent = `Card ${sessionIndex + 1} of ${sessionCards.length}`;
+            }
+
+            // Update interval labels on buttons
+            updateIntervalLabels(card.id);
+
+            // Slide-in animation
+            if (fcCardWrapper) {
+                fcCardWrapper.classList.remove('animate-in');
+                void fcCardWrapper.offsetWidth; // force reflow
+                fcCardWrapper.classList.add('animate-in');
+            }
+        }
+
+        function updateIntervalLabels(cardId) {
+            const state = getCardState(cardId);
+            const intervals = computePreviewIntervals(state);
+
+            const btnLabels = fcActions ? fcActions.querySelectorAll('.fc-btn-interval') : [];
+            if (btnLabels.length >= 4) {
+                btnLabels[0].textContent = formatInterval(intervals[1]);
+                btnLabels[1].textContent = formatInterval(intervals[2]);
+                btnLabels[2].textContent = formatInterval(intervals[3]);
+                btnLabels[3].textContent = formatInterval(intervals[4]);
+            }
+        }
+
+        function computePreviewIntervals(state) {
+            return {
+                1: 0,   // Again = < 1 min
+                2: 1,   // Hard = 1 day
+                3: state.repetitions === 0 ? 1 : (state.repetitions === 1 ? 6 : Math.round(state.interval * state.easeFactor)),
+                4: Math.max(4, state.repetitions === 0 ? 4 : Math.round(state.interval * (state.easeFactor + 0.15)))
+            };
+        }
+
+        function formatInterval(days) {
+            if (days === 0) return '< 1 min';
+            if (days === 1) return '1 day';
+            if (days < 30) return `${days} days`;
+            if (days < 365) return `${Math.round(days / 30)} mo`;
+            return `${(days / 365).toFixed(1)} yr`;
+        }
+
+        function flipCard() {
+            if (sessionCards.length === 0 || sessionIndex >= sessionCards.length) return;
+
+            isFlipped = !isFlipped;
+            if (fcCard) fcCard.classList.toggle('flipped', isFlipped);
+            if (fcActions) fcActions.classList.toggle('visible', isFlipped);
+        }
+
+        function rateCard(rating) {
+            if (!isFlipped || sessionCards.length === 0 || sessionIndex >= sessionCards.length) return;
+
+            const card = sessionCards[sessionIndex];
+            sm2(card.id, rating);
+            reviewedThisSession++;
+
+            // If "Again", re-add to end of session
+            if (rating === 1) {
+                sessionCards.push(card);
+            }
+
+            sessionIndex++;
+            updateStats();
+            showCurrentCard();
+        }
+
+        // Public API
+        return { startSession, flipCard, rateCard, getDueCount, loadState };
+    })();
+
+    // ── Flashcard Event Listeners ──────────────────────
+    if (fcCardWrapper) {
+        fcCardWrapper.addEventListener('click', () => {
+            fcEngine.flipCard();
+        });
+    }
+
+    if (fcActions) {
+        fcActions.querySelectorAll('.fc-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rating = parseInt(btn.dataset.rating);
+                fcEngine.rateCard(rating);
+            });
+        });
+    }
+
+    if (fcDeckFilter) {
+        fcDeckFilter.addEventListener('change', () => {
+            const deck = fcDeckFilter.value;
+            switchToFlashcards(deck);
+        });
+    }
+
+    if (fcTagFilter) {
+        fcTagFilter.addEventListener('change', () => {
+            fcEngine.startSession(fcDeckFilter ? fcDeckFilter.value : 'all');
+        });
+    }
+
+    if (fcExportBtn) {
+        fcExportBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = 'anki-export.txt';
+            link.download = 'anki-export.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // ── Initialize Application ─────────────────────────
+    fcEngine.loadState();
+
     if (flatLessons.length > 0) {
         renderSidebar();
+        renderDeckList();
         
         const loadedFromHash = handleHashNavigation();
         if (!loadedFromHash) {
             loadLesson(0);
         }
     } else {
-        sidebarNav.innerHTML = '<div style="padding: 1.5rem; color: var(--text-muted);">No lessons found. Run node generate.js to populate data.js.</div>';
+        if (sidebarNav) sidebarNav.innerHTML = '<div style="padding: 1.5rem; color: var(--text-muted);">No lessons found. Run node generate.js to populate data.js.</div>';
+        renderDeckList();
     }
 }
 

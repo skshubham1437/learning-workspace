@@ -57,3 +57,8 @@ Perform ALL of the following updates:
 - Never modify completed lesson HTML files unless explicitly asked.
 - Keep `RESOURCES.md` pruned — remove resources that turned out to be low-quality after use.
 - The `NOTES.md` session log is append-only. Never edit past session entries.
+
+## Flashcards
+
+- Automated flashcard generation is disabled.
+- **Whenever you create a new lesson (HTML file) for any course**, you MUST immediately and manually append minimum 4-5 high-quality, concept-focused flashcards for that lesson into `./course-platform/flashcard-data.js`. Do not wait to be asked.

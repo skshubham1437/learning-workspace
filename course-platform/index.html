@@ -20,6 +20,17 @@
                     <h2>Learning Hub</h2>
                 </div>
             </div>
+            <!-- Flashcard Decks Section -->
+            <div class="sidebar-flashcards" id="sidebar-flashcards">
+                <div class="sidebar-section-label">
+                    <span class="section-icon">🃏</span>
+                    <span>Flashcard Review</span>
+                </div>
+                <ul class="deck-list" id="deck-list">
+                    <!-- Dynamically populated by JS -->
+                </ul>
+            </div>
+            <div class="sidebar-divider"></div>
             <nav class="sidebar-nav" id="sidebar-nav">
                 <!-- Dynamically populated by JS -->
             </nav>
@@ -53,12 +64,107 @@
                 </div>
             </header>
 
-            <div class="iframe-container">
+            <div class="iframe-container" id="iframe-container">
                 <iframe id="content-frame" name="content-frame" title="Lesson Content"></iframe>
             </div>
+
+            <!-- Flashcard Review View (hidden by default) -->
+            <div class="flashcard-view" id="flashcard-view" style="display: none;">
+                <!-- Stats Bar -->
+                <div class="fc-stats-bar">
+                    <div class="fc-stat">
+                        <span class="fc-stat-value" id="fc-due-count">0</span>
+                        <span class="fc-stat-label">Due</span>
+                    </div>
+                    <div class="fc-stat">
+                        <span class="fc-stat-value" id="fc-reviewed-count">0</span>
+                        <span class="fc-stat-label">Reviewed</span>
+                    </div>
+                    <div class="fc-stat">
+                        <span class="fc-stat-value" id="fc-mastered-count">0</span>
+                        <span class="fc-stat-label">Mastered</span>
+                    </div>
+                    <div class="fc-stat">
+                        <span class="fc-stat-value" id="fc-total-count">0</span>
+                        <span class="fc-stat-label">Total</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="fc-progress-bar">
+                    <div class="fc-progress-fill" id="fc-progress-fill"></div>
+                </div>
+
+                <!-- Deck Filter -->
+                <div class="fc-controls">
+                    <select id="fc-deck-filter" class="fc-deck-select" aria-label="Filter by deck">
+                        <option value="all">All Decks</option>
+                    </select>
+                    <select id="fc-tag-filter" class="fc-deck-select" aria-label="Filter by tag">
+                        <option value="all">All Tags</option>
+                    </select>
+                    <button id="fc-export-btn" class="fc-export-btn" title="Download Anki Export">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Anki Export</span>
+                    </button>
+                </div>
+
+                <!-- Card Container -->
+                <div class="fc-card-area">
+                    <!-- Empty State -->
+                    <div class="fc-empty-state" id="fc-empty-state" style="display: none;">
+                        <div class="fc-empty-icon">🎉</div>
+                        <h3>All caught up!</h3>
+                        <p>No cards due for review right now. Come back later or switch to a different deck.</p>
+                    </div>
+
+                    <!-- Card -->
+                    <div class="fc-card-wrapper" id="fc-card-wrapper">
+                        <div class="fc-card" id="fc-card">
+                            <div class="fc-card-face fc-card-front" id="fc-card-front">
+                                <div class="fc-card-badge" id="fc-card-badge">glossary</div>
+                                <div class="fc-card-content" id="fc-front-content"></div>
+                                <div class="fc-card-hint">Press <kbd>Space</kbd> or tap to reveal</div>
+                            </div>
+                            <div class="fc-card-face fc-card-back" id="fc-card-back">
+                                <div class="fc-card-badge fc-card-badge-back" id="fc-card-badge-back">answer</div>
+                                <div class="fc-card-content" id="fc-back-content"></div>
+                                <div class="fc-card-source" id="fc-card-source"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Counter -->
+                    <div class="fc-card-counter" id="fc-card-counter">Card 1 of 10</div>
+                </div>
+
+                <!-- Difficulty Buttons -->
+                <div class="fc-actions" id="fc-actions">
+                    <button class="fc-btn fc-btn-again" data-rating="1" title="Again — show in < 1 min">
+                        <span class="fc-btn-label">Again</span>
+                        <span class="fc-btn-interval">&lt; 1 min</span>
+                        <kbd>1</kbd>
+                    </button>
+                    <button class="fc-btn fc-btn-hard" data-rating="2" title="Hard — show in 6 min">
+                        <span class="fc-btn-label">Hard</span>
+                        <span class="fc-btn-interval">6 min</span>
+                        <kbd>2</kbd>
+                    </button>
+                    <button class="fc-btn fc-btn-good" data-rating="3" title="Good — show tomorrow">
+                        <span class="fc-btn-label">Good</span>
+                        <span class="fc-btn-interval">1 day</span>
+                        <kbd>3</kbd>
+                    </button>
+                    <button class="fc-btn fc-btn-easy" data-rating="4" title="Easy — show in 4 days">
+                        <span class="fc-btn-label">Easy</span>
+                        <span class="fc-btn-interval">4 days</span>
+                        <kbd>4</kbd>
+                    </button>
+                </div>
+            </div>
             
-            <!-- Navigation Footer -->
-            <footer class="footer-nav">
+            <!-- Navigation Footer (lessons) -->
+            <footer class="footer-nav" id="footer-nav">
                 <button id="prev-btn" class="nav-btn" aria-label="Go to previous lesson">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                     <span>Previous</span>
@@ -103,6 +209,7 @@
 
     <!-- Data and Logic -->
     <script src="data.js"></script>
+    <script src="flashcard-data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
