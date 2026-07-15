@@ -12,5 +12,5 @@ Decomposition strategies (business capability, domain, subdomain). Good vs bad s
 By the end of this phase, you should be able to look at any monolithic codebase and identify where service boundaries *should* go — and more importantly, where they *shouldn't*.
 
 ## Status
-- [ ] Module 01
+- [x] Module 01
 - [ ] Module 02

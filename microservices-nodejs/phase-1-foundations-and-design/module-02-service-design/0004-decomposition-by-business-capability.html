@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 02, Lesson 1 — Decomposition by Business Capability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/lesson.css" />
+</head>
+<body>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Course progress</span>
+      <span>Module 02 of 15 — Phase 1 of 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 15%;"></div></div>
+  </div>
+
+  <!-- Header -->
+  <div class="lesson-number">Module 02 · Service Design · Lesson 1 of 3</div>
+  <h1>Decomposition by Business Capability</h1>
+  <p class="subtitle">
+    The right way to split a monolith is not by technical layer (routes, controllers, models)
+    but by what the business does. This lesson teaches the tactical DDD patterns that
+    structure the code inside each service.
+  </p>
+
+  <div class="pills">
+    <span class="pill pill-accent">⏱ 40 min read</span>
+    <span class="pill pill-green">Phase 1 — Foundations &amp; Design</span>
+    <span class="pill">Prereq: <a href="../module-01-foundations/0003-service-boundaries-decomposition-strategies.html">Lesson 3</a></span>
+  </div>
+
+  <!-- Primary Source -->
+  <p class="primary-source">
+    📖 <strong>Primary source:</strong>
+    <a href="https://microservices.io/patterns/decomposition/decompose-by-business-capability.html">Chris Richardson, "Decompose by Business Capability"</a>
+    — the canonical pattern reference. Read alongside
+    Vaughn Vernon, <a href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/"><em>Implementing Domain-Driven Design</em></a> Ch. 10 ("Aggregates")
+    and Sam Newman, <a href="https://samnewman.io/books/building_microservices_2nd_edition/"><em>Building Microservices</em></a> Ch. 3 ("Splitting the Monolith").
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       1. THE TWO WRONG WAYS TO DECOMPOSE
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>The two wrong ways to decompose</h2>
+
+  <p>
+    In Module 01, we said "don't map folders to services." But there's actually
+    <em>two</em> bad decomposition strategies, and both are tempting because they match
+    the way your monolith is already organised.
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Strategy</th>
+          <th>What it looks like</th>
+          <th>Why it fails</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>By technical layer</strong></td>
+          <td>
+            "API Gateway Service," "Business Logic Service," "Data Service"
+            — splitting your <code>routes/</code>, <code>service/</code>, and
+            <code>models/</code> into separate deployables
+          </td>
+          <td>
+            Every user request now crosses 3 network boundaries instead of 0.
+            You've added latency and failure modes without gaining any
+            independence. All three services still change together for every
+            feature.<a class="cite" href="https://samnewman.io/books/building_microservices_2nd_edition/" title="Newman, Building Microservices 2nd Ed., Ch. 3">[1]</a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>By entity/table</strong></td>
+          <td>
+            "User Service," "Campaign Service," "Payment Service" — one service
+            per database table
+          </td>
+          <td>
+            Tables don't map to business capabilities. A "campaign" involves
+            creators, payments, deliverables, and notifications. Splitting by
+            table means every business operation spans 4+ services — you've
+            built a distributed
+            <a href="../../reference/glossary.html#distributed-monolith">monolith</a>.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       2. DECOMPOSE BY BUSINESS CAPABILITY
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>The right way: decompose by business capability</h2>
+
+  <p>
+    A <strong>business capability</strong> is something the organisation <em>does</em>
+    to generate value.<a class="cite" href="https://microservices.io/patterns/decomposition/decompose-by-business-capability.html" title="Richardson, Decompose by Business Capability">[2]</a>
+    Not a database table, not a code module — a real-world activity.
+  </p>
+
+  <div class="callout callout-analogy">
+    <span class="callout-label">Applied to your monolith</span>
+    <p>
+      Your <code>routes/v1/index.js</code> mounts 30+ route modules. But the <em>business</em>
+      doesn't have 30 capabilities. It has roughly these:
+    </p>
+    <ul style="margin-top: 0.75rem; margin-bottom: 0;">
+      <li><strong>Campaign Execution</strong> — creating, managing, and completing brand–creator campaigns</li>
+      <li><strong>Creator Discovery &amp; Identity</strong> — onboarding creators, managing profiles, connecting social accounts</li>
+      <li><strong>Financial Operations</strong> — payouts, KYC verification, coupons, affiliate earnings</li>
+      <li><strong>Brand Engagement</strong> — brand onboarding, service packages, inbound requests</li>
+      <li><strong>Communication</strong> — email, WhatsApp, push notifications (all channels, one capability)</li>
+      <li><strong>Intelligence</strong> — analytics, reports, AI features</li>
+    </ul>
+  </div>
+
+  <p>
+    Each business capability becomes a candidate service boundary. The test is simple:
+    <strong>can a team own this capability end-to-end and ship changes without coordinating
+    with other teams?</strong> If yes, it's a good boundary. If no, your boundary is in the
+    wrong place.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       3. WHAT GOES INSIDE A SERVICE — TACTICAL DDD
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>What goes inside a service — Tactical DDD</h2>
+
+  <p>
+    In Module 01, we used <strong>Strategic DDD</strong> to decide <em>where</em> to draw the
+    boundaries. Now we zoom in. <strong>Tactical DDD</strong> tells you how to structure the
+    code <em>inside</em> each
+    service.<a class="cite" href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/" title="Vernon, Implementing DDD, Ch. 5">[3]</a>
+  </p>
+
+  <p>There are four core building blocks:</p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Building Block</th>
+          <th>What it is</th>
+          <th>Example from your system</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Entity</strong></td>
+          <td>An object with a unique identity that persists over time. Two entities with the same data but different IDs are different things.</td>
+          <td>A <code>Campaign</code> — it has an ID, a lifecycle, and its identity matters even if the title changes.</td>
+        </tr>
+        <tr>
+          <td><strong>Value Object</strong></td>
+          <td>An object defined by its attributes, not identity. Two value objects with the same data are interchangeable.</td>
+          <td>A <code>Money({ amount: 5000, currency: 'INR' })</code> — you don't care <em>which</em> ₹5,000 it is. If two have the same values, they're equal.</td>
+        </tr>
+        <tr>
+          <td><strong>Aggregate</strong></td>
+          <td>A cluster of Entities and Value Objects treated as a single unit for data changes. Has one <em>Aggregate Root</em> that controls all access.</td>
+          <td>A <code>Campaign</code> aggregate containing its <code>Deliverables</code>, <code>CreatorAssignments</code>, and <code>Budget</code> — you never modify a deliverable directly, you go through the Campaign.</td>
+        </tr>
+        <tr>
+          <td><strong>Repository</strong></td>
+          <td>An abstraction that provides access to Aggregates as if they were in-memory collections. Hides the database.</td>
+          <td>A <code>CampaignRepository</code> with methods like <code>findById()</code>, <code>save()</code> — the domain code never sees SQL or MongoDB queries.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The most important one: the Aggregate</span>
+    <p>
+      The <strong>Aggregate</strong> is the single most important tactical pattern for microservices.
+      It defines the <em>consistency boundary</em>: everything inside an Aggregate is always
+      consistent (strong consistency), but between Aggregates, you accept
+      <strong>eventual consistency</strong>.<a class="cite" href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/" title="Vernon, Implementing DDD, Ch. 10">[3]</a>
+    </p>
+    <p style="margin-top: 0.75rem; margin-bottom: 0;">
+      This is why Aggregates matter for microservices: <strong>one service should own one or more
+      Aggregates, and cross-Aggregate communication happens through events or API calls —
+      never direct database access.</strong>
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       4. YOUR MONOLITH'S ANTI-PATTERN
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>What your monolith does instead</h2>
+
+  <p>
+    Your <code>campaign.js</code> is 19,000+ lines. That's not just big — it's a sign that
+    there are no Aggregate boundaries inside the Campaign module. Everything touches
+    everything.
+  </p>
+
+  <h3>❌ What a 19,000-line service file looks like</h3>
+  <pre><code><span class="code-comment">// campaign.js — a god file</span>
+<span class="code-comment">// Line 1-2000: Campaign CRUD</span>
+<span class="code-comment">// Line 2001-5000: Creator assignment logic</span>
+<span class="code-comment">// Line 5001-8000: Deliverable tracking</span>
+<span class="code-comment">// Line 8001-11000: Payment calculation</span>
+<span class="code-comment">// Line 11001-14000: Notification triggers</span>
+<span class="code-comment">// Line 14001-17000: Analytics and reporting</span>
+<span class="code-comment">// Line 17001-19600: Music campaign variants</span>
+
+<span class="code-comment">// The problem: a change to payment logic at line 9000</span>
+<span class="code-comment">// might silently break deliverable tracking at line 6500</span>
+<span class="code-comment">// because they share local variables and helper functions.</span></code></pre>
+
+  <p>
+    This happens because the monolith has no concept of Aggregates. Any function can
+    reach into any data. There's no transactional boundary — everything shares one
+    giant request-level transaction.
+  </p>
+
+  <h3>✅ What the same domain looks like with Aggregates</h3>
+  <pre><code><span class="code-comment">// campaign-service/</span>
+<span class="code-comment">//   domain/</span>
+<span class="code-comment">//     campaign/              ← Aggregate Root</span>
+<span class="code-comment">//       Campaign.js           (Entity: identity, lifecycle, status)</span>
+<span class="code-comment">//       Deliverable.js        (Entity: belongs to Campaign)</span>
+<span class="code-comment">//       Budget.js             (Value Object: amount + currency)</span>
+<span class="code-comment">//       CampaignCreated.js    (Domain Event)</span>
+<span class="code-comment">//     creator-assignment/     ← Separate Aggregate</span>
+<span class="code-comment">//       Assignment.js         (Entity: links creator to campaign)</span>
+<span class="code-comment">//       Rate.js               (Value Object: per-post rate)</span>
+<span class="code-comment">//   repository/</span>
+<span class="code-comment">//     CampaignRepository.js  (persistence abstraction)</span>
+<span class="code-comment">//   application/</span>
+<span class="code-comment">//     CreateCampaign.js      (use case / application service)</span>
+<span class="code-comment">//     AssignCreator.js       (use case)</span></code></pre>
+
+  <p>
+    Notice: <code>Deliverable</code> is <em>inside</em> the Campaign Aggregate because a
+    deliverable cannot exist without a campaign. But <code>Assignment</code> is a <em>separate</em>
+    Aggregate — a creator assignment has its own lifecycle and can be modified independently.
+  </p>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       5. ENTITY VS VALUE OBJECT — THE PRACTICAL TEST
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Entity vs Value Object — the practical test</h2>
+
+  <p>
+    This distinction trips people up. Here's the one question that settles
+    it:<a class="cite" href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/" title="Vernon, Implementing DDD, Ch. 6">[3]</a>
+  </p>
+
+  <div class="callout callout-key">
+    <span class="callout-label">The identity test</span>
+    <p>
+      <strong>If two objects have the same data, are they the same thing?</strong>
+    </p>
+    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+      <li>
+        <strong>Yes → Value Object.</strong> Two <code>Money({ amount: 5000, currency: 'INR' })</code>
+        instances are interchangeable. You'd never say "give me <em>that specific</em> ₹5,000."
+      </li>
+      <li>
+        <strong>No → Entity.</strong> Two <code>Campaign</code> objects with the same title and
+        budget are still different campaigns. They have different IDs, different histories,
+        different creators assigned.
+      </li>
+    </ul>
+  </div>
+
+  <h3>In code</h3>
+  <pre><code><span class="code-comment">// Value Object — immutable, compared by value</span>
+<span class="code-keyword">class</span> <span class="code-variable">Money</span> {
+  <span class="code-keyword">constructor</span>(amount, currency) {
+    <span class="code-keyword">if</span> (amount &lt; 0) <span class="code-keyword">throw new</span> Error(<span class="code-string">'Amount cannot be negative'</span>);
+    <span class="code-keyword">if</span> (!currency) <span class="code-keyword">throw new</span> Error(<span class="code-string">'Currency is required'</span>);
+
+    <span class="code-comment">// Freeze to enforce immutability</span>
+    <span class="code-keyword">this</span>.amount = amount;
+    <span class="code-keyword">this</span>.currency = currency;
+    Object.freeze(<span class="code-keyword">this</span>);
+  }
+
+  <span class="code-variable">equals</span>(other) {
+    <span class="code-keyword">return</span> other <span class="code-keyword">instanceof</span> Money
+      && <span class="code-keyword">this</span>.amount === other.amount
+      && <span class="code-keyword">this</span>.currency === other.currency;
+  }
+
+  <span class="code-variable">add</span>(other) {
+    <span class="code-keyword">if</span> (<span class="code-keyword">this</span>.currency !== other.currency)
+      <span class="code-keyword">throw new</span> Error(<span class="code-string">'Cannot add different currencies'</span>);
+    <span class="code-keyword">return new</span> Money(<span class="code-keyword">this</span>.amount + other.amount, <span class="code-keyword">this</span>.currency);
+  }
+}
+
+<span class="code-comment">// Entity — has identity, mutable state</span>
+<span class="code-keyword">class</span> <span class="code-variable">Campaign</span> {
+  #id; #title; #budget; #status; #deliverables;
+
+  <span class="code-keyword">constructor</span>({ id, title, budget, status = <span class="code-string">'draft'</span> }) {
+    <span class="code-keyword">this</span>.#id = id;
+    <span class="code-keyword">this</span>.#title = title;
+    <span class="code-keyword">this</span>.#budget = budget;  <span class="code-comment">// a Money value object</span>
+    <span class="code-keyword">this</span>.#status = status;
+    <span class="code-keyword">this</span>.#deliverables = [];
+  }
+
+  <span class="code-keyword">get</span> <span class="code-variable">id</span>() { <span class="code-keyword">return this</span>.#id; }
+
+  <span class="code-variable">addDeliverable</span>(deliverable) {
+    <span class="code-keyword">if</span> (<span class="code-keyword">this</span>.#status !== <span class="code-string">'draft'</span>)
+      <span class="code-keyword">throw new</span> Error(<span class="code-string">'Cannot add deliverables to a non-draft campaign'</span>);
+    <span class="code-keyword">this</span>.#deliverables.push(deliverable);
+  }
+
+  <span class="code-variable">launch</span>() {
+    <span class="code-keyword">if</span> (<span class="code-keyword">this</span>.#deliverables.length === 0)
+      <span class="code-keyword">throw new</span> Error(<span class="code-string">'Cannot launch a campaign without deliverables'</span>);
+    <span class="code-keyword">this</span>.#status = <span class="code-string">'active'</span>;
+    <span class="code-comment">// Returns a domain event (we'll cover events in Module 03)</span>
+    <span class="code-keyword">return</span> { type: <span class="code-string">'CampaignLaunched'</span>, campaignId: <span class="code-keyword">this</span>.#id };
+  }
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <span class="callout-label">Why this matters for your monolith</span>
+    <p>
+      Right now, your campaign code likely has bare objects like
+      <code>{ amount: 5000, currency: 'INR' }</code> scattered across 20 functions.
+      There's no validation at the domain level — it's all done in route handlers
+      or (worse) not at all. When you extract a Campaign Service, these Value Objects
+      become the <em>first line of defense</em> against bad data entering the system.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       6. THE REPOSITORY PATTERN
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>The Repository Pattern — hiding the database</h2>
+
+  <p>
+    In your monolith, service functions probably call the database directly:
+  </p>
+
+  <pre><code><span class="code-comment">// ❌ What you probably have — database coupled to business logic</span>
+<span class="code-keyword">async function</span> <span class="code-variable">getCampaign</span>(campaignId) {
+  <span class="code-keyword">const</span> <span class="code-variable">campaign</span> = <span class="code-keyword">await</span> db.collection(<span class="code-string">'campaigns'</span>).findOne({ _id: campaignId });
+  <span class="code-keyword">const</span> <span class="code-variable">deliverables</span> = <span class="code-keyword">await</span> db.collection(<span class="code-string">'deliverables'</span>).find({ campaignId }).toArray();
+  <span class="code-keyword">return</span> { ...campaign, deliverables };
+}</code></pre>
+
+  <p>
+    The <strong>Repository</strong> pattern creates an abstraction between your domain logic and
+    the database. Your domain code thinks it's working with an in-memory
+    collection:<a class="cite" href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/" title="Vernon, Implementing DDD, Ch. 12">[3]</a>
+  </p>
+
+  <pre><code><span class="code-comment">// ✅ Repository — domain code doesn't know about MongoDB</span>
+<span class="code-keyword">class</span> <span class="code-variable">CampaignRepository</span> {
+  #collection;
+  #deliverableCollection;
+
+  <span class="code-keyword">constructor</span>(db) {
+    <span class="code-keyword">this</span>.#collection = db.collection(<span class="code-string">'campaigns'</span>);
+    <span class="code-keyword">this</span>.#deliverableCollection = db.collection(<span class="code-string">'deliverables'</span>);
+  }
+
+  <span class="code-keyword">async</span> <span class="code-variable">findById</span>(campaignId) {
+    <span class="code-keyword">const</span> <span class="code-variable">raw</span> = <span class="code-keyword">await this</span>.#collection.findOne({ _id: campaignId });
+    <span class="code-keyword">if</span> (!raw) <span class="code-keyword">return null</span>;
+
+    <span class="code-keyword">const</span> <span class="code-variable">deliverables</span> = <span class="code-keyword">await this</span>.#deliverableCollection
+      .find({ campaignId })
+      .toArray();
+
+    <span class="code-comment">// Reconstruct the Aggregate from persistence</span>
+    <span class="code-keyword">return new</span> Campaign({
+      id: raw._id,
+      title: raw.title,
+      budget: <span class="code-keyword">new</span> Money(raw.budgetAmount, raw.budgetCurrency),
+      status: raw.status,
+      deliverables: deliverables.map(d =&gt; <span class="code-keyword">new</span> Deliverable(d)),
+    });
+  }
+
+  <span class="code-keyword">async</span> <span class="code-variable">save</span>(campaign) {
+    <span class="code-comment">// Persist the entire Aggregate atomically</span>
+    <span class="code-keyword">const</span> <span class="code-variable">session</span> = <span class="code-keyword">await this</span>.#collection.client.startSession();
+    <span class="code-keyword">try</span> {
+      <span class="code-keyword">await</span> session.withTransaction(<span class="code-keyword">async</span> () =&gt; {
+        <span class="code-keyword">await this</span>.#collection.replaceOne(
+          { _id: campaign.id },
+          campaign.toPersistence(),
+          { upsert: <span class="code-keyword">true</span>, session }
+        );
+        <span class="code-comment">// ... save deliverables in same transaction</span>
+      });
+    } <span class="code-keyword">finally</span> {
+      <span class="code-keyword">await</span> session.endSession();
+    }
+  }
+}</code></pre>
+
+  <div class="callout callout-key">
+    <span class="callout-label">Why bother with this abstraction?</span>
+    <p>
+      When you eventually migrate from MongoDB to PostgreSQL (or split the database),
+      only the Repository changes. The domain code — all your business rules — stays
+      untouched. This is the same principle as the Anti-Corruption Layer, but applied
+      <em>inside</em> your own service between the domain and persistence layers.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       7. THE AGGREGATE DESIGN RULES
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Four rules for designing Aggregates</h2>
+
+  <p>
+    Vernon's four rules<a class="cite" href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/" title="Vernon, Implementing DDD, Ch. 10">[3]</a>
+    keep Aggregates small and independently deployable:
+  </p>
+
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Rule</th>
+          <th>What it means</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Protect invariants inside the Aggregate</strong></td>
+          <td>All business rules that must be enforced atomically live inside one Aggregate</td>
+          <td>"A campaign cannot launch without at least one deliverable" — checked inside <code>Campaign.launch()</code></td>
+        </tr>
+        <tr>
+          <td><strong>2. Design small Aggregates</strong></td>
+          <td>Don't put the entire domain into one god Aggregate. Each Aggregate should be a <em>small</em> consistency boundary.</td>
+          <td><code>Campaign</code> and <code>CreatorAssignment</code> are <em>separate</em> Aggregates — assignment changes shouldn't lock the campaign.</td>
+        </tr>
+        <tr>
+          <td><strong>3. Reference other Aggregates by ID only</strong></td>
+          <td>Don't hold a direct reference to another Aggregate instance. Just store its ID.</td>
+          <td>An <code>Assignment</code> holds <code>campaignId</code> and <code>creatorId</code>, not the full <code>Campaign</code> or <code>Creator</code> objects.</td>
+        </tr>
+        <tr>
+          <td><strong>4. Use eventual consistency across Aggregates</strong></td>
+          <td>Don't try to update two Aggregates in one database transaction. Use domain events instead.</td>
+          <td>When a Campaign is completed, a <code>CampaignCompleted</code> event triggers a payout in the Finance Aggregate.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-danger">
+    <span class="callout-label">The #1 mistake — the God Aggregate</span>
+    <p>
+      Your 19,000-line <code>campaign.js</code> is essentially a God Aggregate. Everything
+      related to campaigns — assignments, deliverables, payments, notifications — lives
+      in one transactional blob. This is why a small change to payment calculation
+      can break deliverable tracking: they share the same transaction boundary with
+      no isolation.
+    </p>
+    <p style="margin-bottom: 0;">
+      Splitting this into smaller Aggregates is the <em>first</em> step of your microservices
+      migration — and you can do it <em>inside the monolith</em>, before extracting any service.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       RETRIEVAL PRACTICE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <p style="font-family: var(--sans); font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Answer from memory before revealing. The slight difficulty is the point — it's where storage strength builds.
+    </p>
+
+    <div class="retrieval-question">
+      1. Name the two wrong decomposition strategies and explain why each fails.
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        <strong>By technical layer</strong> (routes/controllers/models as separate services) — adds
+        network hops without independence; all layers still change together.<br />
+        <strong>By entity/table</strong> (one service per DB table) — business operations span multiple
+        tables, so every request fans out across services; creates a distributed monolith.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      2. What is the practical test to distinguish an Entity from a Value Object?
+      <span class="recall-tag r1d">RECALL-1D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        "If two objects have the same data, are they the same thing?"
+        Yes → Value Object (compared by value, immutable).
+        No → Entity (has unique identity, mutable over its lifecycle).
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      3. What is an Aggregate, and why is it the most important tactical DDD pattern for microservices?
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        An Aggregate is a cluster of Entities and Value Objects treated as a single transactional
+        unit, accessed through an Aggregate Root. It defines the consistency boundary: strong
+        consistency inside, eventual consistency outside. This maps directly to microservice
+        boundaries — one service owns one or more Aggregates.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      4. Name all four Aggregate design rules from Vernon.
+      <span class="recall-tag r3d">RECALL-3D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        1. Protect invariants inside the Aggregate.<br />
+        2. Design small Aggregates.<br />
+        3. Reference other Aggregates by ID only (not by direct object reference).<br />
+        4. Use eventual consistency across Aggregates (domain events, not shared transactions).
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      5. What does the Repository pattern do, and why is it critical during a database migration?
+      <span class="recall-tag r7d">RECALL-7D</span>
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        The Repository creates an abstraction between domain logic and the database, making
+        Aggregates appear as in-memory collections. During a DB migration (e.g., MongoDB →
+        PostgreSQL), only the Repository implementation changes — all domain and business
+        logic stays untouched.
+      </p>
+    </details>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       EXERCISE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="exercise">
+    <span class="exercise-label">Exercise — Module 02, Lesson 1</span>
+    <h3>Model the Campaign Aggregate</h3>
+
+    <p style="margin-top: 0.75rem;">
+      Create a folder <code>playground/campaign-aggregate/</code> and build the following:
+    </p>
+
+    <ol>
+      <li>
+        <strong>A <code>Money</code> Value Object</strong> — immutable, with validation
+        (no negative amounts, currency required), and an <code>equals()</code> method.
+      </li>
+      <li>
+        <strong>A <code>Campaign</code> Entity (Aggregate Root)</strong> — with a <code>launch()</code>
+        method that enforces the invariant: "cannot launch without at least one deliverable."
+        The <code>launch()</code> method should return a domain event object
+        <code>{ type: 'CampaignLaunched', campaignId }</code>.
+      </li>
+      <li>
+        <strong>A simple <code>CampaignRepository</code></strong> — for now, use an in-memory
+        <code>Map</code> instead of a real database. It should have <code>save(campaign)</code>
+        and <code>findById(id)</code>.
+      </li>
+      <li>
+        <strong>A test script</strong> that:
+        <ul>
+          <li>Creates a campaign, adds a deliverable, launches it, and verifies the event is returned.</li>
+          <li>Tries to launch a campaign with zero deliverables and catches the error.</li>
+          <li>Saves and retrieves a campaign from the in-memory repository.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Success criterion:</strong> Your <code>Campaign.launch()</code> throws if the invariant
+      is violated, and your Repository can round-trip a Campaign aggregate.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       INTERVIEW PREPARATION
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Interview preparation</h2>
+
+  <div class="interview-tier">
+    <span class="tier-label t1">Tier 1 — Startup / Mid-Market</span>
+    <ul>
+      <li>How do you decide where to split a monolith into services?</li>
+      <li>What's the difference between decomposing by technical layer vs business capability?</li>
+      <li>What is an Entity vs a Value Object? Give a real example from a project you've worked on.</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t2">Tier 2 — Senior Engineer (FAANG-Adjacent)</span>
+    <ul>
+      <li>Explain the Aggregate pattern. What problem does it solve in a distributed system?</li>
+      <li>Why should you reference other Aggregates by ID only, not by direct object reference?</li>
+      <li>Your team has a 15,000-line service file. Using DDD tactical patterns, how would you restructure it?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t3">Tier 3 — Staff Engineer (FAANG)</span>
+    <ul>
+      <li>How do you determine the right size for an Aggregate? What are the tradeoffs of making it too large vs too small?</li>
+      <li>Walk me through Vernon's four Aggregate design rules. Why does Rule 4 ("eventual consistency across Aggregates") create the hardest engineering challenges?</li>
+      <li>Design the Aggregate boundaries for a ride-sharing platform. Where does the driver, the rider, the trip, and the payment each belong?</li>
+    </ul>
+  </div>
+
+  <div class="interview-tier">
+    <span class="tier-label t4">Tier 4 — Production Scenario</span>
+    <ul>
+      <li>Your Campaign Aggregate is 500ms to load because it eagerly fetches 200 deliverables and 50 creator assignments. How would you redesign it using DDD principles without breaking existing APIs?</li>
+      <li>Two teams disagree: Team A says CreatorAssignment should be part of the Campaign Aggregate. Team B says it should be separate. Make the case for each side and give your recommendation.</li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       SOURCES
+  ═════════════════════════════════════════════════════════════════ -->
+  <h2>Sources</h2>
+  <ol style="font-family: var(--sans); font-size: 0.85rem; color: var(--muted);">
+    <li id="src-1"><a href="https://samnewman.io/books/building_microservices_2nd_edition/">Newman, <em>Building Microservices</em> 2nd Ed. (2021)</a> — Ch. 3: Splitting the Monolith</li>
+    <li id="src-2"><a href="https://microservices.io/patterns/decomposition/decompose-by-business-capability.html">Richardson, "Decompose by Business Capability" (microservices.io)</a></li>
+    <li id="src-3"><a href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/">Vernon, <em>Implementing Domain-Driven Design</em> (2013)</a> — Ch. 5 (Entities), Ch. 6 (Value Objects), Ch. 10 (Aggregates), Ch. 12 (Repositories)</li>
+  </ol>
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ASK YOUR TEACHER
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="ask-teacher">
+    💬 <strong>Stuck or curious?</strong> Ask me anything about this lesson.
+    Common questions at this stage: "Is CreatorAssignment really a separate Aggregate?",
+    "Should I use classes or plain objects in Node.js for Entities?",
+    "How do I handle validation in the domain vs the route handler?"
+  </div>
+
+
+  <!-- Footer -->
+  <div class="lesson-footer">
+    <p>
+      <strong>Lesson 1 of 3 complete.</strong> You now know: decompose by business capability,
+      not technical layer. Inside each service, use Entities, Value Objects, Aggregates, and Repositories.
+    </p>
+    <p style="margin-top: 0.5rem;">
+      Complete the exercise above, then ask for <strong>Lesson 2: Good vs Bad Service Boundaries</strong>.
+    </p>
+    <p style="margin-top: 1rem;">
+      📚 <a href="../../reference/glossary.html">Glossary</a>
+      &nbsp;·&nbsp;
+      ← <a href="../module-01-foundations/0003-service-boundaries-decomposition-strategies.html">Module 01 Lesson 3</a>
+    </p>
+  </div>
+
+</body>
+</html>

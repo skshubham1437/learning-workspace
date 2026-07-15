@@ -8,6 +8,8 @@
 :root {
   --bg:              #faf9f6;
   --fg:              #1a1a1a;
+  --surface:         #ffffff;
+  --surface-2:       #f8fafc;
   --accent:          #2563eb;
   --accent-light:    #dbeafe;
   --muted:           #6b7280;
@@ -26,6 +28,28 @@
   --mono:            'JetBrains Mono', 'Fira Code', monospace;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:             #0b1220;
+    --fg:             #e5e7eb;
+    --surface:        #111827;
+    --surface-2:      #0f172a;
+    --accent:         #60a5fa;
+    --accent-light:   #1e3a8a;
+    --muted:          #94a3b8;
+    --border:         #334155;
+    --code-bg:        #111827;
+    --callout-bg:     #1f2937;
+    --callout-border: #f59e0b;
+    --success-bg:     #052e1a;
+    --success-border: #10b981;
+    --danger-bg:      #3f1d1d;
+    --danger-border:  #ef4444;
+    --warn-bg:        #2a2112;
+    --warn-border:    #f59e0b;
+  }
+}
+
 /* ── Reset ────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -35,6 +59,7 @@ body {
   line-height: 1.75;
   color: var(--fg);
   background: var(--bg);
+  color-scheme: light dark;
   max-width: 680px;
   margin: 0 auto;
   padding: 3rem 1.5rem 6rem;
@@ -101,7 +126,7 @@ h1 {
   border-radius: 99px;
   border: 1px solid var(--border);
   color: var(--muted);
-  background: white;
+  background: var(--surface);
 }
 
 .pill-accent { border-color: var(--accent); color: var(--accent); }
@@ -149,8 +174,8 @@ code {
 }
 
 pre {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--surface-2);
+  color: var(--fg);
   padding: 1.25rem 1.5rem;
   border-radius: 8px;
   overflow-x: auto;
@@ -232,7 +257,7 @@ tr:last-child td { border-bottom: none; }
 
 /* ── Architecture diagrams ────────────────── */
 .diagram {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
@@ -301,7 +326,7 @@ tr:last-child td { border-bottom: none; }
 
 /* ── Retrieval practice / flashcards ──────── */
 .retrieval {
-  background: white;
+  background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
@@ -366,7 +391,7 @@ details p {
 
 /* ── Interview tiers ──────────────────────── */
 .interview-tier {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
@@ -480,6 +505,60 @@ details p {
   .retrieval { break-inside: avoid; }
   .progress-wrap { display: none; }
   .ask-teacher { display: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .subtitle,
+  .progress-labels,
+  .arch-label,
+  small,
+  details p,
+  .lesson-footer {
+    color: var(--muted);
+  }
+
+  th,
+  td,
+  .interview-tier li,
+  .primary-source,
+  .lesson-footer,
+  .callout,
+  .exercise,
+  .retrieval,
+  .diagram {
+    color: var(--fg);
+  }
+
+  .pill,
+  .diagram,
+  .retrieval,
+  .interview-tier,
+  .exercise,
+  .callout,
+  .ask-teacher {
+    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.08) inset;
+  }
+
+  .ask-teacher {
+    color: #bfdbfe;
+  }
+
+  .callout-key     { background: rgba(37, 99, 235, 0.12); }
+  .callout-warn    { background: rgba(245, 158, 11, 0.12); }
+  .callout-danger  { background: rgba(239, 68, 68, 0.12); }
+  .callout-success { background: rgba(16, 185, 129, 0.12); }
+  .callout-analogy { background: rgba(245, 158, 11, 0.08); }
+
+  .arch-blue  { background: #1d4ed8; border-color: #3b82f6; color: #dbeafe; }
+  .arch-green { background: #064e3b; border-color: #10b981; color: #d1fae5; }
+  .arch-amber { background: #4a2c0a; border-color: #f59e0b; color: #fde68a; }
+  .arch-red   { background: #4c1d1d; border-color: #f87171; color: #fee2e2; }
+  .arch-gray  { background: #1f2937; border-color: #475569; color: var(--muted); }
+
+  code { background: #172033; }
+  table { color: var(--fg); }
+  th { border-bottom-color: var(--border); }
+  td { border-bottom-color: var(--border); }
 }
 
 /* ── Mobile ───────────────────────────────── */

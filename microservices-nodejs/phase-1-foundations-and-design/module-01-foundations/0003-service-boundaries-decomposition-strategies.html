@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 01, Lesson 3 — Service Boundaries &amp; Decomposition Strategies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/lesson.css" />
+</head>
+<body>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Course progress</span>
+      <span>Module 01 of 15 — Phase 1 of 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width: 12%;"></div></div>
+  </div>
+
+  <!-- Header -->
+  <div class="lesson-number">Module 01 · Foundations · Lesson 3 of 3</div>
+  <h1>Service Boundaries &amp; Decomposition Strategies</h1>
+  <p class="subtitle">
+    How to safely rip apart a monolithic Node.js application without causing a production outage.
+    Say goodbye to massive downtime and hello to the Strangler Fig.
+  </p>
+
+  <div class="pills">
+    <span class="pill pill-accent">⏱ 35 min read</span>
+    <span class="pill pill-green">Phase 1 — Foundations &amp; Design</span>
+    <span class="pill">Prereq: <a href="0002-bounded-contexts-and-ddd.html">Lesson 2</a></span>
+  </div>
+
+  <h2>You can't do it all at once</h2>
+  <p>
+    The biggest mistake companies make when migrating to microservices is attempting a "Big Bang" rewrite. They pause feature development for 6 months, rewrite the entire monolith into 20 microservices, and try to flip the switch in one night. It almost always results in disaster.
+  </p>
+  
+  <p>Instead, we use incremental decomposition strategies. You extract one Bounded Context at a time, verify it works in production, and then move on to the next. The system is always running.</p>
+
+  <h2>1. The Strangler Fig Pattern</h2>
+  
+  <p>The <a href="../../reference/glossary.html#strangler-fig-pattern">Strangler Fig Pattern</a> involves placing an API Gateway or Proxy in front of your monolith. Initially, 100% of traffic routes to the monolith. When you extract a service (like Campaign Management), you configure the proxy to route <code>/v1/campaigns/*</code> to the new service, while everything else falls back to the monolith.</p>
+
+  <div class="diagram" style="padding: 2rem 0; display: flex; justify-content: center; background: #1e1e24; border-radius: 8px; margin: 1.5rem 0;">
+    <div class="mermaid">
+graph TD
+    Client(Client Apps) --&gt; Gateway(API Gateway / Proxy)
+    Gateway -- "/v1/campaigns" --&gt; CampaignService(New Campaign Service)
+    Gateway -- "/* (Default)" --&gt; Monolith(Legacy Xley-Backend Monolith)
+    
+    classDef new fill:#d1fae5,stroke:#047857,stroke-width:2px,color:#000;
+    classDef legacy fill:#fecaca,stroke:#b91c1c,stroke-width:2px,color:#000;
+    classDef proxy fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#000;
+    
+    class CampaignService new;
+    class Monolith legacy;
+    class Gateway proxy;
+    </div>
+  </div>
+
+  <p>In Node.js, you can build this easily using Express and <code>http-proxy-middleware</code>:</p>
+
+  <pre><code><span class="code-comment">// api-gateway.js</span>
+<span class="code-keyword">const</span> <span class="code-variable">express</span> = <span class="code-keyword">require</span>(<span class="code-string">'express'</span>);
+<span class="code-keyword">const</span> { <span class="code-variable">createProxyMiddleware</span> } = <span class="code-keyword">require</span>(<span class="code-string">'http-proxy-middleware'</span>);
+
+<span class="code-keyword">const</span> <span class="code-variable">app</span> = <span class="code-variable">express</span>();
+
+<span class="code-comment">// 1. Route specific paths to the new microservice</span>
+<span class="code-variable">app</span>.<span class="code-keyword">use</span>(<span class="code-string">'/v1/campaigns'</span>, <span class="code-variable">createProxyMiddleware</span>({ 
+  target: <span class="code-string">'http://campaign-service:3001'</span>, 
+  changeOrigin: <span class="code-keyword">true</span> 
+}));
+
+<span class="code-comment">// 2. Everything else falls back to the old monolith</span>
+<span class="code-variable">app</span>.<span class="code-keyword">use</span>(<span class="code-string">'/'</span>, <span class="code-variable">createProxyMiddleware</span>({ 
+  target: <span class="code-string">'http://legacy-monolith:3000'</span>, 
+  changeOrigin: <span class="code-keyword">true</span> 
+}));
+
+<span class="code-variable">app</span>.<span class="code-keyword">listen</span>(8080);</code></pre>
+
+  <h2>2. Branch by Abstraction</h2>
+  <p>Sometimes, logic is deeply embedded inside the monolith (like your `helper.js`) and isn't exposed via a clean REST endpoint. In this case, you use <strong>Branch by Abstraction</strong>:</p>
+  <ol>
+    <li>Create an Interface/Abstraction over the legacy code.</li>
+    <li>Change all clients in the monolith to call the Abstraction instead of the legacy code directly.</li>
+    <li>Build the new Microservice.</li>
+    <li>Create a new implementation of the Abstraction that makes an HTTP call to the new Microservice.</li>
+    <li>Flip the switch (via feature flag) so the Abstraction calls the microservice instead of the legacy code.</li>
+    <li>Once stable, delete the legacy code.</li>
+  </ol>
+
+  <h2>3. Parallel Run (Dark Launching)</h2>
+  <p>For highly critical paths (like Payments or Core Campaigns), you can't afford a single bug. With a Parallel Run, you execute BOTH the old code and the new microservice simultaneously. You return the monolith's result to the user, but you compare it against the new service's result in the background.</p>
+
+  <div class="callout callout-warn">
+    <span class="callout-label">Failure Path Warning</span>
+    <p>If the new microservice is slow or crashes during a Parallel Run, your monolith must catch the error and gracefully ignore it so the user's request isn't impacted. Make sure to wrap the call to the new service in a `try/catch` and a timeout.</p>
+  </div>
+
+  <h2>Strategy Tradeoffs</h2>
+  <div class="diagram">
+    <table>
+      <thead>
+        <tr>
+          <th>Strategy</th>
+          <th>Best For</th>
+          <th>Pros</th>
+          <th>Cons</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Strangler Fig</strong></td>
+          <td>Extracting entire REST resource routes (e.g., `/users`)</td>
+          <td>Clean boundary at the network level; zero downtime.</td>
+          <td>Requires an API Gateway; hard if DB is highly coupled.</td>
+        </tr>
+        <tr>
+          <td><strong>Branch by Abstraction</strong></td>
+          <td>Extracting internal shared libraries or core domain logic</td>
+          <td>Safe, iterative, allows easy rollback via feature flags.</td>
+          <td>Requires touching lots of legacy code to introduce the abstraction.</td>
+        </tr>
+        <tr>
+          <td><strong>Parallel Run</strong></td>
+          <td>High-risk/financial systems where bugs cost money</td>
+          <td>Proves 100% parity before going live.</td>
+          <td>Double the compute cost; complex to compare state-changing operations (like DB writes).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- ════════════════════════════════════════════════════════════════
+       RETRIEVAL PRACTICE
+  ═════════════════════════════════════════════════════════════════ -->
+  <div class="retrieval">
+    <h3>🧠 Retrieval Practice</h3>
+    <div class="retrieval-question">
+      1. What is the Strangler Fig pattern in the context of microservices?
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        A migration strategy where you place an API Gateway in front of your legacy monolith. Over time, you route specific endpoints to new microservices while the rest falls back to the monolith.
+      </p>
+    </details>
+
+    <div class="retrieval-question">
+      2. When would you use Branch by Abstraction instead of the Strangler Fig pattern?
+    </div>
+    <details>
+      <summary>Reveal answer</summary>
+      <p>
+        When the code you want to extract is deeply embedded internal logic (like a shared library or `helper.js`) that isn't exposed via a clean REST endpoint.
+      </p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <span class="exercise-label">Exercise — Module 01, Lesson 3</span>
+    <h3>Build a basic Strangler Proxy</h3>
+    <p>Let's build a real Strangler Fig proxy in Node.js. Create a new folder <code>strangler-exercise/</code> in your workspace.</p>
+    <ol>
+      <li>Initialize a new Node project (<code>npm init -y</code>) and install <code>express</code> and <code>http-proxy-middleware</code>.</li>
+      <li>Create a simple mock "Monolith" server on port 3000 that returns <code>{ src: 'monolith' }</code> for any route.</li>
+      <li>Create a mock "Campaign Service" on port 3001 that returns <code>{ src: 'microservice', data: 'campaign info' }</code> on <code>/api/campaigns</code>.</li>
+      <li>Create the API Gateway on port 8080 that routes <code>/api/campaigns</code> to 3001 and everything else to 3000.</li>
+    </ol>
+    <p>Test it by curling <code>localhost:8080/api/users</code> and <code>localhost:8080/api/campaigns</code>. When you have it working, tell me and show me your Gateway code.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="lesson-footer">
+    <p>
+      <strong>Module 01 Complete!</strong>
+    </p>
+    <p style="margin-top: 0.5rem;">
+      Complete the exercise above, then we will move on to Phase 1, Module 02: Service Design.
+    </p>
+    <p style="margin-top: 1rem;">
+      📚 <a href="../../reference/glossary.html">Glossary</a>
+      &nbsp;·&nbsp;
+      ← <a href="0002-bounded-contexts-and-ddd.html">Lesson 2: Bounded Contexts &amp; DDD</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>

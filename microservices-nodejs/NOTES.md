@@ -47,9 +47,9 @@ When designing exercises, weave MongoDB depth into existing modules rather than 
 
 ## Progress Tracking
 
-- Current Module: 01 — Foundations (Lesson 2 delivered)
-- Exercises Pending: "Draw your Context Map" (Lesson 2 exercise)
-- Exercises Completed: "Map your monolith's coupling surface" (Lesson 1 — debriefed Session 3)
+- Current Module: 02 — Service Design (Lesson 1 pending generation)
+- Exercises Pending: Context Map (deferred by user)
+- Exercises Completed: "Map your monolith's coupling surface" (Lesson 1), "Build a basic Strangler Proxy" (Lesson 3)
 - Confidence Ratings: (none yet)
 
 ## Session Log
@@ -57,3 +57,4 @@ When designing exercises, weave MongoDB depth into existing modules rather than 
 - Session 1 (2026-06-18): Course setup, workspace initialized, diagnostic assessment completed. User's actual knowledge depth calibrated — significantly different from initial prompt claims. Ready to begin Module 01.
 - Session 2 (2026-06-27): Workspace structural overhaul. Created `./assets/lesson.css` (shared stylesheet), `./reference/glossary.html`, flat `./lessons/` directory. Regenerated Lesson 1 with citations, primary source, glossary cross-links, and "ask teacher" reminder. Removed nested phase/module/lessons directory structure.
 - Session 3 (2026-06-29): Lesson 1 exercise debrief. User confirmed all coupling patterns present (shared DB, direct function calls, shared helpers, cross-module breakage). Core domain (Influencers/Campaigns) identified as most tangled. Inspected actual monolith (`Xley-Backend`) — 30 service modules under `service/v1/`, 462KB `influencer_main.js`, 3,600+ line `helper.js`. Created Lesson 2 (Bounded Contexts & DDD) grounded in user's actual codebase. Updated glossary with 8 new DDD terms. Created learning record 0002.
+- Session 4 (2026-07-15): Lesson 2 comprehension check completed. User successfully differentiated between Anti-Corruption Layer and Shared Kernel after initial confusion. Lesson 2 marked complete. User skipped Context Map exercise for now. Lesson 3 (Service Boundaries & Decomposition Strategies) generated and delivered. User successfully built the Strangler proxy exercise in `strangler-exercise/` and passed the Lesson 3 knowledge check. Module 01 is officially complete. Ready to begin Module 02.

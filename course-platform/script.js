@@ -12,6 +12,7 @@ function initApp() {
     const breadcrumbsEl = document.getElementById('breadcrumbs');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const footerNav = document.getElementById('footer-nav');
+    const courseSelect = document.getElementById('course-select');
 
     // Command Palette Elements
     const paletteOverlay = document.getElementById('command-palette-overlay');
@@ -56,7 +57,8 @@ function initApp() {
         });
     });
 
-    let currentLessonIndex = 0;
+    let currentCourseIndex = getInitialCourseIndex();
+    let currentLessonIndex = flatLessons.find(l => l.courseIndex === currentCourseIndex)?.globalIndex || 0;
     let completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
     let paletteOpen = false;
     let selectedPaletteIndex = 0;
@@ -160,6 +162,112 @@ function initApp() {
         sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
     }
 
+    function getInitialCourseIndex() {
+        const savedFolder = localStorage.getItem('selectedCourseFolder');
+        const savedIndex = courseData.findIndex(course => course.folder === savedFolder);
+        return savedIndex >= 0 ? savedIndex : 0;
+    }
+
+    function getCurrentCourse() {
+        return courseData[currentCourseIndex];
+    }
+
+    function getCourseLessonIndexes(courseIndex = currentCourseIndex) {
+        return flatLessons
+            .filter(lesson => lesson.courseIndex === courseIndex)
+            .map(lesson => lesson.globalIndex);
+    }
+
+    function getCoursePosition(index = currentLessonIndex) {
+        const courseIndexes = getCourseLessonIndexes();
+        return courseIndexes.indexOf(index);
+    }
+
+    function getAdjacentLessonIndex(direction) {
+        const courseIndexes = getCourseLessonIndexes();
+        const currentPosition = courseIndexes.indexOf(currentLessonIndex);
+        if (currentPosition === -1) return null;
+
+        const nextPosition = currentPosition + direction;
+        if (nextPosition < 0 || nextPosition >= courseIndexes.length) return null;
+
+        return courseIndexes[nextPosition];
+    }
+
+    function getLessonSectionPath(lesson) {
+        if (Array.isArray(lesson.sectionPath) && lesson.sectionPath.length > 0) {
+            return lesson.sectionPath;
+        }
+        return lesson.section ? [lesson.section] : [];
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value || '';
+        return div.innerHTML;
+    }
+
+    function getSidebarLessonTitle(lesson) {
+        return lesson.title
+            .replace(/^Module\s+\d+\s*,\s*Lesson\s+(\d+)\s+[—-]\s*/i, 'Lesson $1 — ')
+            .replace(/^Lesson\s+0(\d+)\s+[—-]\s*/i, 'Lesson $1 — ');
+    }
+
+    function buildSectionTree(lessons) {
+        const root = { children: new Map(), lessons: [] };
+
+        lessons.forEach(lesson => {
+            const sectionPath = getLessonSectionPath(lesson);
+            let node = root;
+
+            sectionPath.forEach(sectionName => {
+                if (!node.children.has(sectionName)) {
+                    node.children.set(sectionName, {
+                        title: sectionName,
+                        children: new Map(),
+                        lessons: []
+                    });
+                }
+                node = node.children.get(sectionName);
+            });
+
+            node.lessons.push(lesson);
+        });
+
+        return root;
+    }
+
+    function populateCourseSelector() {
+        if (!courseSelect) return;
+
+        courseSelect.innerHTML = '';
+        courseData.forEach((course, index) => {
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = course.title;
+            courseSelect.appendChild(option);
+        });
+
+        courseSelect.value = String(currentCourseIndex);
+    }
+
+    if (courseSelect) {
+        courseSelect.addEventListener('change', () => {
+            const nextCourseIndex = Number(courseSelect.value);
+            if (!Number.isInteger(nextCourseIndex) || !courseData[nextCourseIndex]) return;
+
+            currentCourseIndex = nextCourseIndex;
+            localStorage.setItem('selectedCourseFolder', courseData[currentCourseIndex].folder);
+            renderSidebar();
+
+            const firstLessonIndex = getCourseLessonIndexes(currentCourseIndex)[0];
+            if (typeof firstLessonIndex === 'number') {
+                switchToLessons();
+                loadLesson(firstLessonIndex);
+            }
+        });
+    }
+
     // ══════════════════════════════════════════════════════
     //  MODE SWITCHING: Lessons ↔ Flashcards
     // ══════════════════════════════════════════════════════
@@ -212,83 +320,109 @@ function initApp() {
     function renderSidebar() {
         if (!sidebarNav) return;
         sidebarNav.innerHTML = '';
+        populateCourseSelector();
 
-        courseData.forEach((course, cIndex) => {
-            const group = document.createElement('div');
-            group.className = 'course-group expanded';
-            group.dataset.courseIndex = cIndex;
+        const course = getCurrentCourse();
+        if (!course) return;
 
-            // Header wrap
-            const headerWrap = document.createElement('div');
-            headerWrap.className = 'course-header-wrap';
+        const overview = document.createElement('div');
+        overview.className = 'course-overview';
+        overview.dataset.courseIndex = currentCourseIndex;
 
-            const header = document.createElement('div');
-            header.className = 'course-title';
-            header.innerHTML = `
-                <span>${course.title}</span>
+        const overviewTitle = document.createElement('div');
+        overviewTitle.className = 'course-title';
+        overviewTitle.innerHTML = `<span>${escapeHtml(course.title)}</span>`;
+
+        const progBar = document.createElement('div');
+        progBar.className = 'course-progress-bar';
+        const progFill = document.createElement('div');
+        progFill.className = 'course-progress-fill';
+        progFill.style.width = '0%';
+        progBar.appendChild(progFill);
+
+        overview.appendChild(overviewTitle);
+        overview.appendChild(progBar);
+        sidebarNav.appendChild(overview);
+
+        const tree = buildSectionTree(course.lessons.map(lesson => {
+            const flatLesson = flatLessons.find(fl => fl.path === lesson.path);
+            return flatLesson || lesson;
+        }));
+
+        const rootList = document.createElement('ul');
+        rootList.className = 'section-tree';
+
+        function renderLessonItem(lesson) {
+            const globalIdx = typeof lesson.globalIndex === 'number'
+                ? lesson.globalIndex
+                : flatLessons.findIndex(fl => fl.path === lesson.path);
+            const sidebarTitle = getSidebarLessonTitle(lesson);
+            const item = document.createElement('li');
+            item.className = 'lesson-item';
+            item.dataset.index = globalIdx;
+            item.dataset.path = lesson.path;
+
+            item.innerHTML = `
+                <div class="lesson-item-left">
+                    <span class="completed-icon" title="Completed">✓</span>
+                    <span class="lesson-title-text" title="${escapeHtml(lesson.title)}">${escapeHtml(sidebarTitle)}</span>
+                </div>
+                <span class="lesson-badge">${escapeHtml(lesson.duration || '')}</span>
+            `;
+
+            item.addEventListener('click', () => {
+                switchToLessons();
+                loadLesson(globalIdx);
+                if (window.innerWidth <= 768) toggleSidebar(true);
+            });
+
+            return item;
+        }
+
+        function renderSectionNode(node, depth = 0) {
+            const sectionItem = document.createElement('li');
+            sectionItem.className = `section-group expanded depth-${Math.min(depth, 2)}`;
+
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'section-toggle';
+            toggle.innerHTML = `
+                <span class="section-title-text" title="${escapeHtml(node.title)}">${escapeHtml(node.title)}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
             `;
-            
-            // Progress Bar
-            const progBar = document.createElement('div');
-            progBar.className = 'course-progress-bar';
-            const progFill = document.createElement('div');
-            progFill.className = 'course-progress-fill';
-            progFill.style.width = '0%';
-            progBar.appendChild(progFill);
 
-            headerWrap.appendChild(header);
-            headerWrap.appendChild(progBar);
+            const childList = document.createElement('ul');
+            childList.className = 'lesson-list nested';
 
-            headerWrap.addEventListener('click', () => {
-                group.classList.toggle('expanded');
+            toggle.addEventListener('click', () => {
+                sectionItem.classList.toggle('expanded');
             });
 
-            const list = document.createElement('ul');
-            list.className = 'lesson-list';
-
-            let currentSection = null;
-
-            course.lessons.forEach((lesson) => {
-                const globalIdx = flatLessons.findIndex(fl => fl.path === lesson.path);
-                
-                // Add section label if section changed
-                if (lesson.section && lesson.section !== currentSection) {
-                    currentSection = lesson.section;
-                    const sectionEl = document.createElement('li');
-                    sectionEl.className = 'section-label';
-                    sectionEl.textContent = currentSection;
-                    list.appendChild(sectionEl);
-                }
-                
-                const item = document.createElement('li');
-                item.className = 'lesson-item';
-                item.dataset.index = globalIdx;
-                item.dataset.path = lesson.path;
-
-                item.innerHTML = `
-                    <div class="lesson-item-left">
-                        <span class="completed-icon" title="Completed">✓</span>
-                        <span class="lesson-title-text" title="${lesson.title}">${lesson.title}</span>
-                    </div>
-                    <span class="lesson-badge">${lesson.duration || ''}</span>
-                `;
-
-                item.addEventListener('click', () => {
-                    switchToLessons();
-                    loadLesson(globalIdx);
-                    if (window.innerWidth <= 768) toggleSidebar(true);
-                });
-
-                list.appendChild(item);
+            node.children.forEach(child => {
+                childList.appendChild(renderSectionNode(child, depth + 1));
             });
 
-            group.appendChild(headerWrap);
-            group.appendChild(list);
-            sidebarNav.appendChild(group);
+            node.lessons.forEach(lesson => {
+                childList.appendChild(renderLessonItem(lesson));
+            });
+
+            sectionItem.appendChild(toggle);
+            sectionItem.appendChild(childList);
+            return sectionItem;
+        }
+
+        tree.children.forEach(child => {
+            rootList.appendChild(renderSectionNode(child));
         });
 
+        tree.lessons.forEach(lesson => {
+            rootList.appendChild(renderLessonItem(lesson));
+        });
+
+        sidebarNav.appendChild(rootList);
+
         updateProgressUI();
+        updateUI();
     }
 
     // ── Render Deck List in Sidebar ────────────────────
@@ -345,6 +479,9 @@ function initApp() {
         
         currentLessonIndex = index;
         const lesson = flatLessons[index];
+        const courseChanged = lesson.courseIndex !== currentCourseIndex;
+        currentCourseIndex = lesson.courseIndex;
+        localStorage.setItem('selectedCourseFolder', lesson.folder);
 
         // Update iframe source
         iframe.src = lesson.path;
@@ -361,12 +498,21 @@ function initApp() {
 
         // Update Breadcrumbs
         if (breadcrumbsEl) {
-            breadcrumbsEl.innerHTML = `
-                <span class="breadcrumb-item">${lesson.courseTitle}</span>
+            const sectionCrumbs = getLessonSectionPath(lesson).map(section => `
+                <span class="breadcrumb-item">${escapeHtml(section)}</span>
                 <span class="breadcrumb-sep">›</span>
-                ${lesson.section ? `<span class="breadcrumb-item">${lesson.section}</span><span class="breadcrumb-sep">›</span>` : ''}
-                <span class="breadcrumb-item active" title="${lesson.title}">${lesson.title}</span>
+            `).join('');
+
+            breadcrumbsEl.innerHTML = `
+                <span class="breadcrumb-item">${escapeHtml(lesson.courseTitle)}</span>
+                <span class="breadcrumb-sep">›</span>
+                ${sectionCrumbs}
+                <span class="breadcrumb-item active" title="${escapeHtml(lesson.title)}">${escapeHtml(lesson.title)}</span>
             `;
+        }
+
+        if (courseChanged) {
+            renderSidebar();
         }
 
         updateUI();
@@ -407,17 +553,15 @@ function initApp() {
             }
         });
 
-        // Update course group progress bars
-        courseData.forEach((course, cIdx) => {
-            if (!sidebarNav) return;
-            const groupEl = sidebarNav.children[cIdx];
-            if (!groupEl) return;
+        // Update selected course progress bar
+        const course = getCurrentCourse();
+        if (course && sidebarNav) {
             const totalInCourse = course.lessons.length;
             const completedInCourse = course.lessons.filter(l => completedLessons.includes(l.path)).length;
             const pct = totalInCourse > 0 ? Math.round((completedInCourse / totalInCourse) * 100) : 0;
-            const fillEl = groupEl.querySelector('.course-progress-fill');
+            const fillEl = sidebarNav.querySelector('.course-progress-fill');
             if (fillEl) fillEl.style.width = `${pct}%`;
-        });
+        }
 
         // Update Mark Complete Button
         if (markCompleteBtn && currentLesson) {
@@ -436,19 +580,24 @@ function initApp() {
             el.classList.remove('active');
             if (parseInt(el.dataset.index) === currentLessonIndex && appMode === 'lessons') {
                 el.classList.add('active');
-                const group = el.closest('.course-group');
-                if (group) group.classList.add('expanded');
+                let group = el.closest('.section-group');
+                while (group) {
+                    group.classList.add('expanded');
+                    group = group.parentElement?.closest('.section-group');
+                }
                 el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
 
         // Update Navigation Buttons
-        if (prevBtn) prevBtn.disabled = currentLessonIndex === 0;
-        if (nextBtn) nextBtn.disabled = currentLessonIndex === flatLessons.length - 1;
+        if (prevBtn) prevBtn.disabled = getAdjacentLessonIndex(-1) === null;
+        if (nextBtn) nextBtn.disabled = getAdjacentLessonIndex(1) === null;
 
         // Update Progress Text
         if (progressEl) {
-            progressEl.textContent = `Lesson ${currentLessonIndex + 1} of ${flatLessons.length}`;
+            const courseIndexes = getCourseLessonIndexes();
+            const coursePosition = Math.max(0, getCoursePosition());
+            progressEl.textContent = `Lesson ${coursePosition + 1} of ${courseIndexes.length}`;
         }
 
         updateProgressUI();
@@ -457,12 +606,14 @@ function initApp() {
     // Event Listeners for Nav Buttons
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
-            if (currentLessonIndex > 0) loadLesson(currentLessonIndex - 1);
+            const previousIndex = getAdjacentLessonIndex(-1);
+            if (previousIndex !== null) loadLesson(previousIndex);
         });
     }
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
-            if (currentLessonIndex < flatLessons.length - 1) loadLesson(currentLessonIndex + 1);
+            const nextIndex = getAdjacentLessonIndex(1);
+            if (nextIndex !== null) loadLesson(nextIndex);
         });
     }
 
@@ -519,10 +670,10 @@ function initApp() {
 
             item.innerHTML = `
                 <div class="palette-item-left">
-                    <span class="palette-item-title">${lesson.title}</span>
-                    <span class="palette-item-course">${lesson.courseTitle} ${lesson.section ? `· ${lesson.section}` : ''}</span>
+                    <span class="palette-item-title">${escapeHtml(lesson.title)}</span>
+                    <span class="palette-item-course">${escapeHtml(lesson.courseTitle)} ${getLessonSectionPath(lesson).length ? `· ${escapeHtml(getLessonSectionPath(lesson).join(' · '))}` : ''}</span>
                 </div>
-                <span class="lesson-badge">${lesson.duration || ''}</span>
+                <span class="lesson-badge">${escapeHtml(lesson.duration || '')}</span>
             `;
 
             item.addEventListener('mouseenter', () => {
@@ -613,9 +764,11 @@ function initApp() {
 
         // Lesson Navigation (Left/Right Arrows)
         if (e.key === 'ArrowLeft') {
-            if (currentLessonIndex > 0) loadLesson(currentLessonIndex - 1);
+            const previousIndex = getAdjacentLessonIndex(-1);
+            if (previousIndex !== null) loadLesson(previousIndex);
         } else if (e.key === 'ArrowRight') {
-            if (currentLessonIndex < flatLessons.length - 1) loadLesson(currentLessonIndex + 1);
+            const nextIndex = getAdjacentLessonIndex(1);
+            if (nextIndex !== null) loadLesson(nextIndex);
         }
     });
 
@@ -1008,7 +1161,7 @@ function initApp() {
         
         const loadedFromHash = handleHashNavigation();
         if (!loadedFromHash) {
-            loadLesson(0);
+            loadLesson(currentLessonIndex);
         }
     } else {
         if (sidebarNav) sidebarNav.innerHTML = '<div style="padding: 1.5rem; color: var(--text-muted);">No lessons found. Run node generate.js to populate data.js.</div>';

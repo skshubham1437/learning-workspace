@@ -673,5 +673,137 @@ const flashcardData = [
         "back": "It exposes the database directly to the internet. Containers on the same Docker network can communicate with each other automatically without publishing ports to the host.",
         "source": "0010-docker-networks-container-communication.html",
         "created": "2026-07-14"
+    },
+
+    // --- Lesson 2: Bounded Contexts & DDD ---
+    {
+        "id": "microser-005",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "bounded-contexts"],
+        "front": "What is a <b>Bounded Context</b> in Domain-Driven Design?",
+        "back": "A logical boundary within which a particular domain model applies and all terms have precise, unambiguous meaning.<br><br>Example: \"Campaign\" means something different in the Campaign Management context vs. the Finance context. A Bounded Context draws the line so models don't bleed into each other.",
+        "source": "0002-bounded-contexts-and-ddd.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-006",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "bounded-contexts"],
+        "front": "What are the 3 heuristics for drawing <b>service boundaries</b> (Bounded Contexts)?",
+        "back": "<b>1. Language divergence</b>: Where does the same word mean different things?<br><b>2. Rate of change</b>: Which parts change together vs. independently?<br><b>3. Team ownership</b>: Who \"owns\" this business capability?",
+        "source": "0002-bounded-contexts-and-ddd.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-007",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "bounded-contexts"],
+        "front": "Why is grouping modules by <b>business capability</b> better than grouping by <b>code structure</b>?",
+        "back": "Code folders like <code>/models</code>, <code>/controllers</code>, <code>/services</code> reflect technical layers, not business concepts. Business capabilities group things that change for the same business reason — making each service's boundaries stable, independently deployable, and team-ownable.",
+        "source": "0002-bounded-contexts-and-ddd.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-008",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "context-mapping", "anti-corruption-layer"],
+        "front": "What is an <b>Anti-Corruption Layer (ACL)</b>?",
+        "back": "A translation layer that converts one context's model into another's language.<br><br>It protects a context from being coupled to another context's internal data structures. When the upstream changes, only the ACL breaks, not your entire service.",
+        "source": "0002-bounded-contexts-and-ddd.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-009",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "context-mapping", "shared-kernel"],
+        "front": "Why is a massive shared <code>helper.js</code> file dangerous in a microservices architecture?",
+        "back": "It creates an <b>accidental Shared Kernel</b>. Every module that uses it becomes implicitly coupled to every other module that uses it. Changing a single utility function can break completely unrelated parts of the system unpredictably.",
+        "source": "0002-bounded-contexts-and-ddd.html",
+        "created": "2026-07-15"
+    },
+
+    // --- Lesson 3: Decomposition Strategies ---
+    {
+        "id": "microser-010",
+        "deck": "Microservices Nodejs",
+        "tags": ["decomposition", "strangler-fig"],
+        "front": "What is the <b>Strangler Fig Pattern</b>?",
+        "back": "A migration strategy where you place an API Gateway or proxy in front of your legacy monolith. Over time, you route specific endpoints (like <code>/v1/campaigns</code>) to new microservices while the rest still fall back to the monolith, eventually \"strangling\" it until it can be retired.",
+        "source": "0003-service-boundaries-decomposition-strategies.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-011",
+        "deck": "Microservices Nodejs",
+        "tags": ["decomposition", "branch-by-abstraction"],
+        "front": "What is <b>Branch by Abstraction</b>?",
+        "back": "A pattern used <i>inside</i> the monolith before extracting a service. You create an interface (abstraction) over the old code, swap the internal implementation to call the new service, and only delete the old code when the new service is proven stable.",
+        "source": "0003-service-boundaries-decomposition-strategies.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-012",
+        "deck": "Microservices Nodejs",
+        "tags": ["decomposition", "parallel-run"],
+        "front": "What is a <b>Parallel Run</b> (Dark Launching)?",
+        "back": "Routing traffic to <i>both</i> the old monolith and the new microservice simultaneously. Only the monolith's response is returned to the user, but the new service's response is logged and compared to detect discrepancies before going fully live.",
+        "source": "0003-service-boundaries-decomposition-strategies.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-013",
+        "deck": "Microservices Nodejs",
+        "tags": ["decomposition", "api-gateway"],
+        "front": "Why is an <b>API Gateway</b> crucial for the Strangler Fig Pattern?",
+        "back": "It acts as the single entry point for clients. Without it, clients would have to know which routes live on the old monolith and which live on the new microservices, coupling the frontend to your migration timeline.",
+        "source": "0003-service-boundaries-decomposition-strategies.html",
+        "created": "2026-07-15"
+    },
+
+    // --- Module 02, Lesson 1: Decomposition by Business Capability ---
+    {
+        "id": "microser-014",
+        "deck": "Microservices Nodejs",
+        "tags": ["decomposition", "business-capability"],
+        "front": "Why is decomposing a monolith <b>by technical layer</b> (routes, controllers, models) the wrong approach?",
+        "back": "Every user request now crosses 3+ network boundaries instead of 0. You add latency and failure modes without gaining independence — all layers still change together for every feature. It's a distributed monolith with extra steps.",
+        "source": "0004-decomposition-by-business-capability.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-015",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "tactical", "entity", "value-object"],
+        "front": "How do you distinguish a DDD <b>Entity</b> from a <b>Value Object</b>?",
+        "back": "Ask: <i>'If two objects have identical data, are they the same thing?'</i><br/>• <b>Yes → Value Object</b> (compared by value, immutable). E.g., <code>Money(5000, 'INR')</code>.<br/>• <b>No → Entity</b> (has unique identity, mutable over its lifecycle). E.g., a <code>Campaign</code> with its own ID.",
+        "source": "0004-decomposition-by-business-capability.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-016",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "tactical", "aggregate"],
+        "front": "What is a DDD <b>Aggregate</b> and why is it the most important pattern for microservices?",
+        "back": "An Aggregate is a cluster of Entities and Value Objects treated as a single transactional unit, accessed only through its <b>Aggregate Root</b>. It defines the <b>consistency boundary</b>: strong consistency inside, eventual consistency outside. This maps directly to microservice boundaries.",
+        "source": "0004-decomposition-by-business-capability.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-017",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "tactical", "aggregate"],
+        "front": "List Vernon's <b>four Aggregate design rules</b>.",
+        "back": "1. <b>Protect invariants</b> inside the Aggregate boundary.<br/>2. <b>Design small Aggregates</b> (don't create a God Aggregate).<br/>3. <b>Reference other Aggregates by ID only</b> — never hold direct object references.<br/>4. <b>Use eventual consistency across Aggregates</b> — domain events, not shared transactions.",
+        "source": "0004-decomposition-by-business-capability.html",
+        "created": "2026-07-15"
+    },
+    {
+        "id": "microser-018",
+        "deck": "Microservices Nodejs",
+        "tags": ["ddd", "tactical", "repository"],
+        "front": "What is the <b>Repository pattern</b> and why use it inside a microservice?",
+        "back": "A Repository abstracts persistence so domain code treats Aggregates as in-memory collections (with <code>findById()</code>, <code>save()</code>). Domain logic never sees SQL or MongoDB queries. When you migrate databases, only the Repository implementation changes — all business rules stay untouched.",
+        "source": "0004-decomposition-by-business-capability.html",
+        "created": "2026-07-15"
     }
 ];

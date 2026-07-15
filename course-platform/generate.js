@@ -40,15 +40,21 @@ function cleanHtmlText(str) {
         .trim();
 }
 
-function formatSectionName(relDir) {
-    if (!relDir || relDir === '.') return '';
-    // e.g., "phase-1-foundations-and-design/module-01-foundations" -> "Module 01 Foundations"
-    // e.g., "lessons" -> "Lessons"
-    const parts = relDir.split(/[\\/]/);
-    const lastPart = parts[parts.length - 1];
-    return lastPart
+function formatPathSegment(segment) {
+    return segment
         .replace(/-/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function formatSectionName(relDir) {
+    if (!relDir || relDir === '.') return '';
+    const parts = relDir.split(/[\\/]/);
+    return formatPathSegment(parts[parts.length - 1]);
+}
+
+function formatSectionPath(relDir) {
+    if (!relDir || relDir === '.') return [];
+    return relDir.split(/[\\/]/).map(formatPathSegment);
 }
 
 function generateCourseData() {
@@ -74,6 +80,7 @@ function generateCourseData() {
             const relDir = path.dirname(path.relative(coursePath, filePath));
             const fileName = path.basename(filePath, '.html');
             const slug = fileName;
+            const sectionPath = formatSectionPath(relDir);
             
             let title = fileName.replace(/-/g, ' '); // fallback title
             let description = '';
@@ -118,6 +125,7 @@ function generateCourseData() {
                 slug: slug,
                 path: relativeToPlatform,
                 section: formatSectionName(relDir),
+                sectionPath: sectionPath,
                 duration: duration,
                 description: description
             };
@@ -152,4 +160,3 @@ const courseData = ${JSON.stringify(courseData, null, 4)};
 // ──────────────────────────────────────────────────────────────
 
 generateCourseData();
-
